@@ -1,0 +1,152 @@
+[
+  {
+    "request_id": "request_001",
+    "user_id": "user_001",
+    "context": {
+      "occasion": "quotidien",
+      "style": "naturel",
+      "finish": "naturel",
+      "budget": 50,
+      "preferred_colors": [
+        "rose",
+        "nude"
+      ]
+    },
+    "created_at": "2026-09-27T10:00:00Z"
+  },
+  {
+    "request_id": "request_002",
+    "user_id": "user_002",
+    "context": {
+      "occasion": "mariage",
+      "style": "sophistique",
+      "finish": "glowy",
+      "budget": 100,
+      "preferred_colors": [
+        "bronze",
+        "marron"
+      ]
+    },
+    "created_at": "2026-09-27T10:05:00Z"
+  },
+  {
+    "request_id": "request_003",
+    "user_id": "user_003",
+    "context": {
+      "occasion": "soiree",
+      "style": "sophistique",
+      "finish": "mat",
+      "budget": 60,
+      "preferred_colors": [
+        "marron",
+        "nude"
+      ]
+    },
+    "created_at": "2026-09-27T10:10:00Z"
+  },
+  {
+    "request_id": "request_004",
+    "user_id": "user_004",
+    "context": {
+      "occasion": "quotidien",
+      "style": "naturel",
+      "finish": "naturel",
+      "budget": 50,
+      "preferred_colors": [
+        "rose",
+        "nude"
+      ]
+    },
+    "created_at": "2026-09-27T10:00:00Z"
+  },
+  {
+    "request_id": "request_005",
+    "user_id": "user_005",
+    "context": {
+      "occasion": "mariage",
+      "style": "sophistique",
+      "finish": "glowy",
+      "budget": 100,
+      "preferred_colors": [
+        "bronze",
+        "marron"
+      ]
+    },
+    "created_at": "2026-09-27T10:05:00Z"
+  },
+  {
+    "request_id": "request_006",
+    "user_id": "user_006",
+    "context": {
+      "occasion": "soiree",
+      "style": "sophistique",
+      "finish": "mat",
+      "budget": 60,
+      "preferred_colors": [
+        "marron",
+        "nude"
+      ]
+    },
+    "created_at": "2026-09-27T10:10:00Z"
+  },
+  {
+    "request_id": "request_007",
+    "user_id": "user_007",
+    "context": {
+      "occasion": "quotidien",
+      "style": "naturel",
+      "finish": "naturel",
+      "budget": 50,
+      "preferred_colors": [
+        "rose",
+        "nude"
+      ]
+    },
+    "created_at": "2026-09-27T10:00:00Z"
+  },
+  {
+    "request_id": "request_008",
+    "user_id": "user_008",
+    "context": {
+      "occasion": "mariage",
+      "style": "sophistique",
+      "finish": "glowy",
+      "budget": 100,
+      "preferred_colors": [
+        "bronze",
+        "marron"
+      ]
+    },
+    "created_at": "2026-09-27T10:05:00Z"
+  },
+  {
+    "request_id": "request_009",
+    "user_id": "user_009",
+    "context": {
+      "occasion": "soiree",
+      "style": "sophistique",
+      "finish": "mat",
+      "budget": 60,
+      "preferred_colors": [
+        "marron",
+        "nude"
+      ]
+    },
+    "created_at": "2026-09-27T10:10:00Z"
+  },
+  {
+    "request_id": "request_010",
+    "user_id": "user_010",
+    "context": {
+      "occasion": "quotidien",
+      "style": "naturel",
+      "finish": "naturel",
+      "budget": 50,
+      "preferred_colors": [
+        "rose",
+        "nude"
+      ]
+    },
+    "created_at": "2026-09-27T10:00:00Z"
+  }
+]
