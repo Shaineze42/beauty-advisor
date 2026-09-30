@@ -1,51 +1,51 @@
 product_id,brand,name,category,price,shade,finish,suitable_skin_type,available,updated_at
-prod_001,Rare Beauty,Blush Soft Pinch,blush,25.00,rose,glowy,normale,true,2026-09-27
-prod_002,Fenty Beauty,Pro Filt'r Foundation,teint,38.00,nude,naturel,mixte,true,2026-09-27
-prod_003,NYX,Butter Gloss,levres,8.90,bronze,glowy,seche,true,2026-09-27
-prod_004,Sephora Collection,Palette Nude,yeux,29.90,marron,mat,grasse,true,2026-09-27
-prod_005,Rare Beauty,Liquid Touch Foundation,teint,32.00,medium,naturel,normale,true,2026-09-27
-prod_006,Rare Beauty,Blush Soft Pinch,blush,25.00,rose,glowy,normale,true,2026-09-27
-prod_007,Fenty Beauty,Pro Filt'r Foundation,teint,38.00,nude,naturel,mixte,true,2026-09-27
-prod_008,NYX,Butter Gloss,levres,8.90,bronze,glowy,seche,true,2026-09-27
-prod_009,Sephora Collection,Palette Nude,yeux,29.90,marron,mat,grasse,true,2026-09-27
-prod_010,Rare Beauty,Liquid Touch Foundation,teint,32.00,medium,naturel,normale,true,2026-09-27
-prod_011,Rare Beauty,Blush Soft Pinch,blush,25.00,rose,glowy,normale,true,2026-09-27
-prod_012,Fenty Beauty,Pro Filt'r Foundation,teint,38.00,nude,naturel,mixte,true,2026-09-27
-prod_013,NYX,Butter Gloss,levres,8.90,bronze,glowy,seche,true,2026-09-27
-prod_014,Sephora Collection,Palette Nude,yeux,29.90,marron,mat,grasse,true,2026-09-27
-prod_015,Rare Beauty,Liquid Touch Foundation,teint,32.00,medium,naturel,normale,true,2026-09-27
-prod_016,Rare Beauty,Blush Soft Pinch,blush,25.00,rose,glowy,normale,true,2026-09-27
-prod_017,Fenty Beauty,Pro Filt'r Foundation,teint,38.00,nude,naturel,mixte,true,2026-09-27
-prod_018,NYX,Butter Gloss,levres,8.90,bronze,glowy,seche,true,2026-09-27
-prod_019,Sephora Collection,Palette Nude,yeux,29.90,marron,mat,grasse,true,2026-09-27
-prod_020,Rare Beauty,Liquid Touch Foundation,teint,32.00,medium,naturel,normale,true,2026-09-27
-prod_021,Rare Beauty,Blush Soft Pinch,blush,25.00,rose,glowy,normale,true,2026-09-27
-prod_022,Fenty Beauty,Pro Filt'r Foundation,teint,38.00,nude,naturel,mixte,true,2026-09-27
-prod_023,NYX,Butter Gloss,levres,8.90,bronze,glowy,seche,true,2026-09-27
-prod_024,Sephora Collection,Palette Nude,yeux,29.90,marron,mat,grasse,true,2026-09-27
-prod_025,Rare Beauty,Liquid Touch Foundation,teint,32.00,medium,naturel,normale,true,2026-09-27
-prod_026,Rare Beauty,Blush Soft Pinch,blush,25.00,rose,glowy,normale,true,2026-09-27
-prod_027,Fenty Beauty,Pro Filt'r Foundation,teint,38.00,nude,naturel,mixte,true,2026-09-27
-prod_028,NYX,Butter Gloss,levres,8.90,bronze,glowy,seche,true,2026-09-27
-prod_029,Sephora Collection,Palette Nude,yeux,29.90,marron,mat,grasse,true,2026-09-27
-prod_030,Rare Beauty,Liquid Touch Foundation,teint,32.00,medium,naturel,normale,true,2026-09-27
-prod_031,Rare Beauty,Blush Soft Pinch,blush,25.00,rose,glowy,normale,true,2026-09-27
-prod_032,Fenty Beauty,Pro Filt'r Foundation,teint,38.00,nude,naturel,mixte,true,2026-09-27
-prod_033,NYX,Butter Gloss,levres,8.90,bronze,glowy,seche,true,2026-09-27
-prod_034,Sephora Collection,Palette Nude,yeux,29.90,marron,mat,grasse,true,2026-09-27
-prod_035,Rare Beauty,Liquid Touch Foundation,teint,32.00,medium,naturel,normale,true,2026-09-27
-prod_036,Rare Beauty,Blush Soft Pinch,blush,25.00,rose,glowy,normale,true,2026-09-27
-prod_037,Fenty Beauty,Pro Filt'r Foundation,teint,38.00,nude,naturel,mixte,true,2026-09-27
-prod_038,NYX,Butter Gloss,levres,8.90,bronze,glowy,seche,true,2026-09-27
-prod_039,Sephora Collection,Palette Nude,yeux,29.90,marron,mat,grasse,true,2026-09-27
-prod_040,Rare Beauty,Liquid Touch Foundation,teint,32.00,medium,naturel,normale,true,2026-09-27
-prod_041,Rare Beauty,Blush Soft Pinch,blush,25.00,rose,glowy,normale,true,2026-09-27
-prod_042,Fenty Beauty,Pro Filt'r Foundation,teint,38.00,nude,naturel,mixte,true,2026-09-27
-prod_043,NYX,Butter Gloss,levres,8.90,bronze,glowy,seche,true,2026-09-27
-prod_044,Sephora Collection,Palette Nude,yeux,29.90,marron,mat,grasse,true,2026-09-27
-prod_045,Rare Beauty,Liquid Touch Foundation,teint,32.00,medium,naturel,normale,true,2026-09-27
-prod_046,Rare Beauty,Blush Soft Pinch,blush,25.00,rose,glowy,normale,true,2026-09-27
-prod_047,Fenty Beauty,Pro Filt'r Foundation,teint,38.00,nude,naturel,mixte,true,2026-09-27
-prod_048,NYX,Butter Gloss,levres,8.90,bronze,glowy,seche,true,2026-09-27
-prod_049,Sephora Collection,Palette Nude,yeux,29.90,marron,mat,grasse,true,2026-09-27
-prod_050,Rare Beauty,Liquid Touch Foundation,teint,32.00,medium,naturel,normale,true,2026-09-27
+prod_001,Rare Beauty,Palette yeux Rare Beauty Marron,yeux,38.57,marron,naturel,grasse,false,2026-09-27
+prod_002,Sephora Collection,Blush Sephora Collection Rose,blush,39.47,rose,glowy,normale,true,2026-09-27
+prod_003,NYX,Palette yeux NYX Rouge,yeux,18.96,rouge,mat,seche,true,2026-09-27
+prod_004,Fenty Beauty,Fond de teint Fenty Beauty Bronze,teint,64.16,bronze,glowy,mixte,true,2026-09-27
+prod_005,Rare Beauty,Blush Rare Beauty Marron,blush,23.84,marron,glowy,grasse,true,2026-09-27
+prod_006,NYX,Fond de teint NYX Nude,teint,29.1,nude,glowy,grasse,true,2026-09-27
+prod_007,NYX,Palette yeux NYX Rose,yeux,42.72,rose,naturel,mixte,true,2026-09-27
+prod_008,Fenty Beauty,Gloss Fenty Beauty Nude,levres,34.35,nude,mat,normale,true,2026-09-27
+prod_009,Fenty Beauty,Blush Fenty Beauty Bronze,blush,56.04,bronze,mat,seche,true,2026-09-27
+prod_010,Fenty Beauty,Fond de teint Fenty Beauty Rose,teint,53.89,rose,mat,normale,true,2026-09-27
+prod_011,Rare Beauty,Palette yeux Rare Beauty Nude,yeux,60.05,nude,glowy,normale,true,2026-09-27
+prod_012,NYX,Fond de teint NYX Nude,teint,45.36,nude,naturel,seche,true,2026-09-27
+prod_013,Sephora Collection,Gloss Sephora Collection Nude,levres,23.1,nude,naturel,normale,true,2026-09-27
+prod_014,NYX,Palette yeux NYX Rouge,yeux,32.42,rouge,mat,mixte,true,2026-09-27
+prod_015,NYX,Fond de teint NYX Nude,teint,64.85,nude,glowy,normale,true,2026-09-27
+prod_016,Sephora Collection,Palette yeux Sephora Collection Rose,yeux,51.08,rose,glowy,grasse,true,2026-09-27
+prod_017,Fenty Beauty,Palette yeux Fenty Beauty Nude,yeux,53.15,nude,naturel,seche,true,2026-09-27
+prod_018,Rare Beauty,Gloss Rare Beauty Marron,levres,29.75,marron,naturel,grasse,false,2026-09-27
+prod_019,NYX,Blush NYX Rouge,blush,57.06,rouge,naturel,mixte,true,2026-09-27
+prod_020,Rare Beauty,Palette yeux Rare Beauty Rouge,yeux,50.8,rouge,naturel,normale,true,2026-09-27
+prod_021,NYX,Gloss NYX Rose,levres,24.73,rose,glowy,mixte,true,2026-09-27
+prod_022,Rare Beauty,Palette yeux Rare Beauty Bronze,yeux,63.4,bronze,glowy,seche,true,2026-09-27
+prod_023,Rare Beauty,Gloss Rare Beauty Bronze,levres,55.98,bronze,mat,seche,true,2026-09-27
+prod_024,Fenty Beauty,Palette yeux Fenty Beauty Nude,yeux,29.31,nude,mat,grasse,true,2026-09-27
+prod_025,Rare Beauty,Blush Rare Beauty Rouge,blush,26.48,rouge,glowy,seche,true,2026-09-27
+prod_026,NYX,Blush NYX Bronze,blush,21.65,bronze,glowy,mixte,true,2026-09-27
+prod_027,Rare Beauty,Gloss Rare Beauty Rose,levres,49.72,rose,glowy,normale,true,2026-09-27
+prod_028,Fenty Beauty,Gloss Fenty Beauty Nude,levres,45.61,nude,glowy,seche,false,2026-09-27
+prod_029,Fenty Beauty,Fond de teint Fenty Beauty Bronze,teint,38.08,bronze,mat,seche,true,2026-09-27
+prod_030,Fenty Beauty,Blush Fenty Beauty Rouge,blush,51.05,rouge,naturel,normale,true,2026-09-27
+prod_031,NYX,Blush NYX Marron,blush,64.72,marron,naturel,seche,true,2026-09-27
+prod_032,Sephora Collection,Gloss Sephora Collection Rouge,levres,33.73,rouge,naturel,mixte,true,2026-09-27
+prod_033,Rare Beauty,Blush Rare Beauty Bronze,blush,9.2,bronze,mat,grasse,true,2026-09-27
+prod_034,Fenty Beauty,Gloss Fenty Beauty Rose,levres,12.05,rose,mat,mixte,true,2026-09-27
+prod_035,Fenty Beauty,Gloss Fenty Beauty Rose,levres,59.61,rose,glowy,grasse,true,2026-09-27
+prod_036,Rare Beauty,Fond de teint Rare Beauty Rouge,teint,21.57,rouge,mat,mixte,true,2026-09-27
+prod_037,Fenty Beauty,Palette yeux Fenty Beauty Rouge,yeux,15.54,rouge,mat,normale,false,2026-09-27
+prod_038,Sephora Collection,Gloss Sephora Collection Nude,levres,52.72,nude,mat,grasse,true,2026-09-27
+prod_039,Fenty Beauty,Fond de teint Fenty Beauty Rose,teint,13.53,rose,naturel,grasse,true,2026-09-27
+prod_040,Sephora Collection,Palette yeux Sephora Collection Marron,yeux,34.62,marron,glowy,mixte,true,2026-09-27
+prod_041,Rare Beauty,Fond de teint Rare Beauty Rose,teint,30.95,rose,naturel,mixte,true,2026-09-27
+prod_042,Rare Beauty,Fond de teint Rare Beauty Nude,teint,18.92,nude,glowy,seche,true,2026-09-27
+prod_043,Fenty Beauty,Blush Fenty Beauty Marron,blush,18.46,marron,mat,mixte,true,2026-09-27
+prod_044,Rare Beauty,Blush Rare Beauty Marron,blush,54.06,marron,mat,normale,true,2026-09-27
+prod_045,Rare Beauty,Blush Rare Beauty Rose,blush,45.17,rose,naturel,grasse,true,2026-09-27
+prod_046,Rare Beauty,Fond de teint Rare Beauty Rose,teint,60.8,rose,mat,grasse,true,2026-09-27
+prod_047,Fenty Beauty,Fond de teint Fenty Beauty Marron,teint,35.68,marron,naturel,normale,true,2026-09-27
+prod_048,Sephora Collection,Gloss Sephora Collection Rose,levres,17.38,rose,naturel,seche,true,2026-09-27
+prod_049,Sephora Collection,Palette yeux Sephora Collection Bronze,yeux,60.81,bronze,naturel,grasse,true,2026-09-27
+prod_050,NYX,Blush NYX Marron,blush,47.71,marron,glowy,normale,true,2026-09-27

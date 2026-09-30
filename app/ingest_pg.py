@@ -12,6 +12,16 @@ load_dotenv()
 rng = random.Random(42)
 BATCH_SIZE = 1000
 
+USER_COLUMNS = [
+    "user_id", "skin_type", "complexion", "undertone",
+    "preferred_finish", "preferred_style", "max_budget", "created_at",
+]
+
+PRODUCT_COLUMNS = [
+    "product_id", "brand", "name", "category", "price",
+    "shade", "finish", "suitable_skin_type", "available", "updated_at",
+]
+
 
 def get_env(name: str, default: str) -> str:
     return os.getenv(name, default)
@@ -29,18 +39,13 @@ def connect_with_retry(max_attempts: int = 10, delay_seconds: int = 3):
     for attempt in range(1, max_attempts + 1):
         try:
             return psycopg2.connect(**connection_params)
-
         except psycopg2.OperationalError as error:
             if attempt == max_attempts:
                 raise RuntimeError(
-                    "Impossible de se connecter à PostgreSQL après "
-                    f"{max_attempts} tentatives."
+                    f"Impossible de se connecter à PostgreSQL après {max_attempts} tentatives."
                 ) from error
 
-            print(
-                f"PostgreSQL indisponible, nouvelle tentative "
-                f"{attempt}/{max_attempts}..."
-            )
+            print(f"PostgreSQL indisponible, nouvelle tentative {attempt}/{max_attempts}...")
             time.sleep(delay_seconds)
 
     raise RuntimeError("Connexion PostgreSQL impossible.")
@@ -71,13 +76,7 @@ def build_users(count: int = 20):
 
 
 def build_products(count: int = 50):
-    brands = [
-        "Rare Beauty",
-        "Fenty Beauty",
-        "NYX",
-        "Sephora Collection",
-    ]
-
+    brands = ["Rare Beauty", "Fenty Beauty", "NYX", "Sephora Collection"]
     categories = ["teint", "blush", "yeux", "lèvres"]
     finishes = ["mat", "naturel", "glowy"]
     skin_types = ["sèche", "grasse", "mixte", "normale"]
@@ -108,26 +107,70 @@ def build_products(count: int = 50):
     return products
 
 
-def build_interactions(user_count: int = 20, product_count: int = 50):
+def build_interactions(users, products, interactions_per_user: int = 8):
+    """
+    CORRECTION : le produit tiré n'est plus 100% aléatoire. ~75% des
+    interactions par utilisateur portent sur un produit compatible avec
+    son profil (type de peau ou fini préféré, dans son budget), le reste
+    reste aléatoire pour simuler du bruit réaliste. Sans ça, aucun
+    signal appris n'était disponible pour le moteur de recommandation.
+    """
+    user_dicts = [dict(zip(USER_COLUMNS, row)) for row in users]
+    product_dicts = [dict(zip(PRODUCT_COLUMNS, row)) for row in products]
+
     interaction_types = ["favorite", "purchase", "review"]
     interactions = []
     interaction_index = 1
 
-    for user_index in range(1, user_count + 1):
-        for _ in range(5):
-            interaction_type = rng.choice(interaction_types)
-
-            rating = (
-                rng.randint(1, 5)
-                if interaction_type == "review"
-                else None
+    for user in user_dicts:
+        compatible = [
+            p for p in product_dicts
+            if (
+                p["suitable_skin_type"] == user["skin_type"]
+                or p["finish"] == user["preferred_finish"]
             )
+            and p["price"] <= user["max_budget"] * 1.15
+        ]
+        incompatible = [p for p in product_dicts if p not in compatible]
+
+        used_products = set()
+        attempts = 0
+
+        while (
+            len(used_products) < interactions_per_user
+            and attempts < interactions_per_user * 5
+        ):
+            attempts += 1
+
+            use_compatible = rng.random() < 0.75 and compatible
+            pool = compatible if use_compatible else (incompatible or product_dicts)
+            product = rng.choice(pool)
+
+            if product["product_id"] in used_products:
+                continue
+
+            used_products.add(product["product_id"])
+
+            is_match = product in compatible
+
+            if is_match:
+                interaction_type = rng.choices(interaction_types, weights=[0.35, 0.35, 0.30])[0]
+                rating = (
+                    rng.choices([5, 4, 3], weights=[0.5, 0.35, 0.15])[0]
+                    if interaction_type == "review" else None
+                )
+            else:
+                interaction_type = rng.choices(interaction_types, weights=[0.15, 0.15, 0.70])[0]
+                rating = (
+                    rng.choices([1, 2, 3, 4], weights=[0.3, 0.3, 0.25, 0.15])[0]
+                    if interaction_type == "review" else None
+                )
 
             interactions.append(
                 (
                     f"interaction_{interaction_index:04d}",
-                    f"user_{user_index:03d}",
-                    f"prod_{rng.randint(1, product_count):03d}",
+                    user["user_id"],
+                    product["product_id"],
                     interaction_type,
                     rating,
                     datetime.now(timezone.utc),
@@ -140,12 +183,7 @@ def build_interactions(user_count: int = 20, product_count: int = 50):
 
 
 def insert_rows(cursor, query: str, rows: list[tuple]) -> None:
-    execute_values(
-        cursor,
-        query,
-        rows,
-        page_size=BATCH_SIZE,
-    )
+    execute_values(cursor, query, rows, page_size=BATCH_SIZE)
 
 
 def main() -> None:
@@ -159,7 +197,7 @@ def main() -> None:
         with connection.cursor() as cursor:
             users = build_users()
             products = build_products()
-            interactions = build_interactions()
+            interactions = build_interactions(users, products)
 
             insert_rows(
                 cursor,
@@ -199,18 +237,15 @@ def main() -> None:
         duration = round(time.perf_counter() - start_time, 2)
 
         print(
-            f"✅ Données PostgreSQL insérées : "
-            f"{len(users)} utilisateurs, "
-            f"{len(products)} produits, "
-            f"{len(interactions)} interactions "
+            f"✅ Données PostgreSQL insérées : {len(users)} utilisateurs, "
+            f"{len(products)} produits, {len(interactions)} interactions "
             f"en {duration} secondes."
         )
 
     except Exception:
         if connection is not None:
             connection.rollback()
-
-        print("❌ Échec de l’ingestion PostgreSQL.")
+        print("❌ Échec de l'ingestion PostgreSQL.")
         raise
 
     finally:

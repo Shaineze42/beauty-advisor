@@ -109,18 +109,20 @@ def filter_candidates(rows):
         candidates = available_rows
         budget_fallback = True
 
-    exact_skin_rows = [
+    compatible_rows = [
         row
         for row in candidates
-        if to_int(row.get("skin_match")) == 1
+        if (
+            to_int(row.get("skin_match")) == 1
+            or to_int(row.get("finish_match")) == 1
+        )
     ]
 
-    if exact_skin_rows:
-        candidates = exact_skin_rows
+    if compatible_rows:
+        candidates = compatible_rows
         skin_fallback = False
     else:
         skin_fallback = True
-
     return candidates, budget_fallback, skin_fallback
 
 
