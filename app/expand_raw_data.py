@@ -119,7 +119,7 @@ def build_users():
 def is_compatible(user, product):
     skin_ok = user["skin_type"] == product["suitable_skin_type"]
     finish_ok = user["preferred_finish"] == product["finish"]
-    budget_ok = float(product["price"]) <= float(user["max_budget"]) * 1.15
+    budget_ok = float(product["price"]) <= float(user["max_budget"])
     return (skin_ok or finish_ok) and budget_ok
 
 

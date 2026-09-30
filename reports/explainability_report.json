@@ -1,27 +1,217 @@
 {
   "status": "success",
-  "users_tested": 3,
+  "users_tested": 20,
+  "checks": [
+    "routine non vide, sans doublon, <= 4 produits",
+    "budget total respecté",
+    "score compris entre 0 et 1",
+    "explication cohérente avec peau, fini et prix réels",
+    "explications distinctes dans une routine",
+    "contre-tests : fini, budget, peau, historique",
+    "utilisateur inconnu géré",
+    "replis signalés"
+  ],
+  "fallback_users": [],
   "results": [
     {
       "user_id": "user_001",
       "products_count": 4,
-      "total_price": 99.46,
+      "total_price": 99.92,
       "budget": 100.0,
-      "explanations_validated": true
+      "fallbacks": {
+        "budget": false,
+        "skin_type": false
+      }
     },
     {
       "user_id": "user_002",
       "products_count": 2,
       "total_price": 58.7,
       "budget": 60.0,
-      "explanations_validated": true
+      "fallbacks": {
+        "budget": false,
+        "skin_type": false
+      }
     },
     {
       "user_id": "user_003",
       "products_count": 2,
       "total_price": 58.78,
       "budget": 60.0,
-      "explanations_validated": true
+      "fallbacks": {
+        "budget": false,
+        "skin_type": false
+      }
+    },
+    {
+      "user_id": "user_004",
+      "products_count": 3,
+      "total_price": 62.78,
+      "budget": 80.0,
+      "fallbacks": {
+        "budget": false,
+        "skin_type": false
+      }
+    },
+    {
+      "user_id": "user_005",
+      "products_count": 3,
+      "total_price": 58.43,
+      "budget": 60.0,
+      "fallbacks": {
+        "budget": false,
+        "skin_type": false
+      }
+    },
+    {
+      "user_id": "user_006",
+      "products_count": 1,
+      "total_price": 17.38,
+      "budget": 30.0,
+      "fallbacks": {
+        "budget": false,
+        "skin_type": false
+      }
+    },
+    {
+      "user_id": "user_007",
+      "products_count": 4,
+      "total_price": 83.62,
+      "budget": 100.0,
+      "fallbacks": {
+        "budget": false,
+        "skin_type": false
+      }
+    },
+    {
+      "user_id": "user_008",
+      "products_count": 1,
+      "total_price": 23.1,
+      "budget": 30.0,
+      "fallbacks": {
+        "budget": false,
+        "skin_type": false
+      }
+    },
+    {
+      "user_id": "user_009",
+      "products_count": 3,
+      "total_price": 89.45,
+      "budget": 100.0,
+      "fallbacks": {
+        "budget": false,
+        "skin_type": false
+      }
+    },
+    {
+      "user_id": "user_010",
+      "products_count": 3,
+      "total_price": 50.56,
+      "budget": 60.0,
+      "fallbacks": {
+        "budget": false,
+        "skin_type": false
+      }
+    },
+    {
+      "user_id": "user_011",
+      "products_count": 2,
+      "total_price": 58.39,
+      "budget": 60.0,
+      "fallbacks": {
+        "budget": false,
+        "skin_type": false
+      }
+    },
+    {
+      "user_id": "user_012",
+      "products_count": 3,
+      "total_price": 76.08,
+      "budget": 80.0,
+      "fallbacks": {
+        "budget": false,
+        "skin_type": false
+      }
+    },
+    {
+      "user_id": "user_013",
+      "products_count": 2,
+      "total_price": 57.04,
+      "budget": 60.0,
+      "fallbacks": {
+        "budget": false,
+        "skin_type": false
+      }
+    },
+    {
+      "user_id": "user_014",
+      "products_count": 4,
+      "total_price": 84.5,
+      "budget": 100.0,
+      "fallbacks": {
+        "budget": false,
+        "skin_type": false
+      }
+    },
+    {
+      "user_id": "user_015",
+      "products_count": 3,
+      "total_price": 98.55,
+      "budget": 100.0,
+      "fallbacks": {
+        "budget": false,
+        "skin_type": false
+      }
+    },
+    {
+      "user_id": "user_016",
+      "products_count": 2,
+      "total_price": 25.58,
+      "budget": 30.0,
+      "fallbacks": {
+        "budget": false,
+        "skin_type": false
+      }
+    },
+    {
+      "user_id": "user_017",
+      "products_count": 1,
+      "total_price": 17.38,
+      "budget": 30.0,
+      "fallbacks": {
+        "budget": false,
+        "skin_type": false
+      }
+    },
+    {
+      "user_id": "user_018",
+      "products_count": 4,
+      "total_price": 84.5,
+      "budget": 100.0,
+      "fallbacks": {
+        "budget": false,
+        "skin_type": false
+      }
+    },
+    {
+      "user_id": "user_019",
+      "products_count": 2,
+      "total_price": 52.94,
+      "budget": 60.0,
+      "fallbacks": {
+        "budget": false,
+        "skin_type": false
+      }
+    },
+    {
+      "user_id": "user_020",
+      "products_count": 2,
+      "total_price": 52.94,
+      "budget": 60.0,
+      "fallbacks": {
+        "budget": false,
+        "skin_type": false
+      }
     }
   ],
   "errors": []

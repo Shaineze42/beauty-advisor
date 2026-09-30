@@ -1,22 +1,42 @@
 {
   "status": "success",
+  "dataset_version": "beauty-advisor-v1",
+  "generated_at": "2026-09-30T14:09:30+00:00",
+  "source_hash": {
+    "products_raw.csv": "95445fd274556a66",
+    "users_raw.csv": "ffcf041abea06915",
+    "interactions_raw.csv": "cb01d32536aa2d53"
+  },
+  "split": {
+    "method": "par utilisateur",
+    "test_ratio": 0.2,
+    "split_seed": 42,
+    "negative_seed": 42,
+    "min_positives_to_evaluate": 2
+  },
+  "positive_definition": "favorite, purchase, ou review avec note >= 4",
+  "negative_definition": "review avec note <= 2 (rejet explicite), ou produit jamais interagi tiré au hasard sans remise (non-interaction échantillonnée, pas un rejet réel)",
   "users": 20,
   "products": 50,
   "source_interactions": 100,
   "unique_user_product_pairs": 100,
   "feature_rows": 1000,
-  "labeled_rows": 169,
-  "train_rows": 129,
+  "labeled_rows": 173,
+  "duplicated_labeled_pairs": 0,
+  "train_rows": 133,
   "test_rows": 40,
-  "positive_rows": 78,
+  "positive_rows": 80,
   "real_negative_rows": 13,
-  "sampled_negative_rows": 78,
-  "negative_rows": 91,
-  "testable_users": 20,
+  "sampled_negative_rows": 80,
+  "negative_rows": 93,
+  "users_total": 20,
+  "users_with_at_least_2_positives": 20,
+  "users_in_test": 20,
   "recommendation_requests": 10,
   "missing_values": {
     "interaction_type": 900,
-    "rating": 953,
-    "label": 909
+    "rating": 959,
+    "interaction_signal": 900,
+    "label": 907
   }
 }
