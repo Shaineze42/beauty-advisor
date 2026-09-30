@@ -1,7 +1,7 @@
 {
   "status": "success",
-  "generated_at": "2026-09-30T14:45:45+00:00",
-  "files_checked": 18,
+  "generated_at": "2026-09-30T15:09:43+00:00",
+  "files_checked": 22,
   "checks": [
     "syntaxe Python",
     "secrets et jetons en dur",
@@ -12,7 +12,7 @@
   "unit_tests": {
     "passed": true,
     "summary": [
-      "Ran 19 tests in 0.524s",
+      "Ran 29 tests in 0.043s",
       "",
       "OK"
     ]

@@ -1,0 +1,183 @@
+{
+  "status": "indicative_gaps",
+  "generated_at": "2026-09-30T15:09:48+00:00",
+  "dataset_version": "beauty-advisor-v1",
+  "method": "comparaison des métriques par groupe (écart max - min, groupes >= 3 personnes) et mesure de la concentration par marque",
+  "protected_data_note": "Aucune donnée sensible (origine, santé, biométrie) n'est collectée ; carnation et sous-ton sont des attributs cosmétiques déclarés.",
+  "quality_by_group": {
+    "skin_type": {
+      "groups": {
+        "grasse": {
+          "users": 5,
+          "compatibility_rate": 1.0,
+          "fill_rate": 0.6,
+          "hit_functional": 0.6
+        },
+        "mixte": {
+          "users": 5,
+          "compatibility_rate": 1.0,
+          "fill_rate": 0.8,
+          "hit_functional": 1.0
+        },
+        "normale": {
+          "users": 3,
+          "compatibility_rate": 1.0,
+          "fill_rate": 0.4167,
+          "hit_functional": 0.3333
+        },
+        "sèche": {
+          "users": 7,
+          "compatibility_rate": 1.0,
+          "fill_rate": 0.6071,
+          "hit_functional": 0.5714
+        }
+      },
+      "max_gap": {
+        "compatibility_rate": 0.0,
+        "fill_rate": 0.3833,
+        "hit_functional": 0.6667
+      }
+    },
+    "complexion": {
+      "groups": {
+        "claire": {
+          "users": 8,
+          "compatibility_rate": 1.0,
+          "fill_rate": 0.6875,
+          "hit_functional": 0.625
+        },
+        "foncee": {
+          "users": 6,
+          "compatibility_rate": 1.0,
+          "fill_rate": 0.5833,
+          "hit_functional": 0.5
+        },
+        "medium": {
+          "users": 6,
+          "compatibility_rate": 1.0,
+          "fill_rate": 0.5833,
+          "hit_functional": 0.8333
+        }
+      },
+      "max_gap": {
+        "compatibility_rate": 0.0,
+        "fill_rate": 0.1042,
+        "hit_functional": 0.3333
+      }
+    },
+    "undertone": {
+      "groups": {
+        "chaud": {
+          "users": 7,
+          "compatibility_rate": 1.0,
+          "fill_rate": 0.5714,
+          "hit_functional": 0.5714
+        },
+        "froid": {
+          "users": 5,
+          "compatibility_rate": 1.0,
+          "fill_rate": 0.5,
+          "hit_functional": 0.4
+        },
+        "neutre": {
+          "users": 8,
+          "compatibility_rate": 1.0,
+          "fill_rate": 0.75,
+          "hit_functional": 0.875
+        }
+      },
+      "max_gap": {
+        "compatibility_rate": 0.0,
+        "fill_rate": 0.25,
+        "hit_functional": 0.475
+      }
+    },
+    "preferred_finish": {
+      "groups": {
+        "glowy": {
+          "users": 7,
+          "compatibility_rate": 1.0,
+          "fill_rate": 0.7143,
+          "hit_functional": 0.5714
+        },
+        "mat": {
+          "users": 5,
+          "compatibility_rate": 1.0,
+          "fill_rate": 0.8,
+          "hit_functional": 0.8
+        },
+        "naturel": {
+          "users": 8,
+          "compatibility_rate": 1.0,
+          "fill_rate": 0.4375,
+          "hit_functional": 0.625
+        }
+      },
+      "max_gap": {
+        "compatibility_rate": 0.0,
+        "fill_rate": 0.3625,
+        "hit_functional": 0.2286
+      }
+    },
+    "budget_tier": {
+      "groups": {
+        "budget 31-60 EUR": {
+          "users": 8,
+          "compatibility_rate": 1.0,
+          "fill_rate": 0.5625,
+          "hit_functional": 0.5
+        },
+        "budget <= 30 EUR": {
+          "users": 4,
+          "compatibility_rate": 1.0,
+          "fill_rate": 0.25,
+          "hit_functional": 0.25
+        },
+        "budget > 60 EUR": {
+          "users": 8,
+          "compatibility_rate": 1.0,
+          "fill_rate": 0.875,
+          "hit_functional": 1.0
+        }
+      },
+      "max_gap": {
+        "compatibility_rate": 0.0,
+        "fill_rate": 0.625,
+        "hit_functional": 0.75
+      }
+    }
+  },
+  "catalog_exposure": {
+    "recommendations_total": 51,
+    "distinct_products_recommended": 22,
+    "brand_share": {
+      "fenty beauty": 0.3137,
+      "rare beauty": 0.2941,
+      "sephora collection": 0.1961,
+      "nyx": 0.1961
+    },
+    "category_share": {
+      "lèvres": 0.2941,
+      "teint": 0.2941,
+      "blush": 0.2549,
+      "yeux": 0.1569
+    },
+    "top_brand": "fenty beauty",
+    "top_brand_share": 0.3137,
+    "max_brand_share_threshold": 0.4
+  },
+  "warnings": [],
+  "indicative_gaps": [
+    "skin_type : écart de 0.3833 sur fill_rate (indicatif : plus petit groupe = 3 personnes)",
+    "skin_type : écart de 0.6667 sur hit_functional (indicatif : plus petit groupe = 3 personnes)",
+    "complexion : écart de 0.3333 sur hit_functional (indicatif : plus petit groupe = 6 personnes)",
+    "undertone : écart de 0.475 sur hit_functional (indicatif : plus petit groupe = 5 personnes)",
+    "preferred_finish : écart de 0.3625 sur fill_rate (indicatif : plus petit groupe = 5 personnes)",
+    "budget_tier : écart de 0.625 sur fill_rate (attendu : le budget total limite le nombre de produits)",
+    "budget_tier : écart de 0.75 sur hit_functional (indicatif : plus petit groupe = 4 personnes)"
+  ],
+  "limits": [
+    "20 utilisatrices synthétiques : aucun groupe n'atteint 10 personnes, les écarts sont indicatifs",
+    "les écarts de fill rate entre niveaux de budget sont attendus (budget total strict)"
+  ]
+}

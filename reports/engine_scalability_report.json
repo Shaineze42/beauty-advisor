@@ -1,0 +1,41 @@
+{
+  "status": "success",
+  "generated_at": "2026-09-30T15:09:49+00:00",
+  "repeats_per_size": 5,
+  "threshold_seconds_at_max_size": 2.0,
+  "results": [
+    {
+      "catalog_size": 50,
+      "average_seconds": 0.00015,
+      "max_seconds": 0.00019,
+      "products_returned": 4,
+      "budget_respected": true,
+      "slowdown_vs_50_products": 1.0
+    },
+    {
+      "catalog_size": 500,
+      "average_seconds": 0.00106,
+      "max_seconds": 0.00111,
+      "products_returned": 4,
+      "budget_respected": true,
+      "slowdown_vs_50_products": 7.1
+    },
+    {
+      "catalog_size": 5000,
+      "average_seconds": 0.01095,
+      "max_seconds": 0.01112,
+      "products_returned": 4,
+      "budget_respected": true,
+      "slowdown_vs_50_products": 73.0
+    },
+    {
+      "catalog_size": 50000,
+      "average_seconds": 0.12214,
+      "max_seconds": 0.12411,
+      "products_returned": 4,
+      "budget_respected": true,
+      "slowdown_vs_50_products": 814.3
+    }
+  ],
+  "interpretation": "La durée croît de façon à peu près linéaire avec la taille du catalogue (filtrage et tri). Au-delà, une pré-indexation par utilisateur serait nécessaire."
+}

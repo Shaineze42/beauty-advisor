@@ -1,0 +1,107 @@
+name: CI-CD Beauty Advisor
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    # Recalibration planifiée : chaque lundi à 06:00 UTC
+    - cron: "0 6 * * 1"
+
+permissions:
+  contents: read
+
+env:
+  DATA_DIR: ${{ github.workspace }}/data
+  REPORTS_DIR: ${{ github.workspace }}/reports
+
+jobs:
+  quality:
+    name: Qualité, tests et chaîne IA
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Récupérer le code
+        uses: actions/checkout@v4
+
+      - name: Installer Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: app/requirements.txt
+
+      - name: Installer les dépendances
+        run: pip install -r app/requirements.txt
+
+      - name: Vérifier qu'aucun secret n'est versionné
+        run: |
+          if git ls-files | grep -E '^\.env$'; then
+            echo "Le fichier .env ne doit pas être versionné"; exit 1
+          fi
+
+      - name: Contrôle qualité, sécurité et tests unitaires
+        run: python app/quality_check.py
+
+      - name: Chaîne IA complète (sans bases de données)
+        run: python app/run_bloc4.py --no-db
+
+      - name: Publier les rapports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rapports-beauty-advisor
+          path: |
+            reports/*.json
+            reports/*.log
+          if-no-files-found: warn
+
+  docker:
+    name: Validation Docker
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: quality
+    steps:
+      - name: Récupérer le code
+        uses: actions/checkout@v4
+
+      - name: Valider docker-compose
+        run: |
+          cp .env.example .env
+          docker compose config --quiet
+
+      - name: Construire l'image
+        run: docker build ./app
+
+  publish:
+    name: Publier l'image (déploiement continu)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: docker
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Récupérer le code
+        uses: actions/checkout@v4
+
+      - name: Nom d'image en minuscules
+        run: echo "IMAGE=ghcr.io/${GITHUB_REPOSITORY,,}" >> "$GITHUB_ENV"
+
+      - name: Connexion au registre GitHub
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Construire et publier
+        uses: docker/build-push-action@v6
+        with:
+          context: ./app
+          push: true
+          tags: |
+            ${{ env.IMAGE }}:latest
+            ${{ env.IMAGE }}:${{ github.sha }}

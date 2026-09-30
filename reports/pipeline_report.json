@@ -1,44 +1,44 @@
 {
   "pipeline": "Beauty Advisor",
   "status": "success",
-  "started_at": "2026-09-30T14:51:16.542983+00:00",
-  "finished_at": "2026-09-30T14:51:19.017708+00:00",
-  "duration_seconds": 2.47,
+  "started_at": "2026-09-30T15:09:44.490154+00:00",
+  "finished_at": "2026-09-30T15:09:47.521891+00:00",
+  "duration_seconds": 3.03,
   "steps": [
     {
       "name": "validation",
       "script": "validate_data.py",
       "status": "success",
-      "started_at": "2026-09-30T14:51:16.543637+00:00",
-      "finished_at": "2026-09-30T14:51:17.251604+00:00",
-      "duration_seconds": 0.71,
+      "started_at": "2026-09-30T15:09:44.491317+00:00",
+      "finished_at": "2026-09-30T15:09:45.284533+00:00",
+      "duration_seconds": 0.79,
       "return_code": 0
     },
     {
       "name": "transformation",
       "script": "transform_data.py",
       "status": "success",
-      "started_at": "2026-09-30T14:51:17.251774+00:00",
-      "finished_at": "2026-09-30T14:51:17.735276+00:00",
-      "duration_seconds": 0.48,
+      "started_at": "2026-09-30T15:09:45.284976+00:00",
+      "finished_at": "2026-09-30T15:09:45.922690+00:00",
+      "duration_seconds": 0.64,
       "return_code": 0
     },
     {
       "name": "chargement_postgresql",
       "script": "load_pg.py",
       "status": "success",
-      "started_at": "2026-09-30T14:51:17.735491+00:00",
-      "finished_at": "2026-09-30T14:51:18.207500+00:00",
-      "duration_seconds": 0.47,
+      "started_at": "2026-09-30T15:09:45.922884+00:00",
+      "finished_at": "2026-09-30T15:09:46.589390+00:00",
+      "duration_seconds": 0.67,
       "return_code": 0
     },
     {
       "name": "chargement_mongodb",
       "script": "load_mongo.py",
       "status": "success",
-      "started_at": "2026-09-30T14:51:18.207708+00:00",
-      "finished_at": "2026-09-30T14:51:19.017586+00:00",
-      "duration_seconds": 0.81,
+      "started_at": "2026-09-30T15:09:46.589624+00:00",
+      "finished_at": "2026-09-30T15:09:47.521709+00:00",
+      "duration_seconds": 0.93,
       "return_code": 0
     }
   ]
