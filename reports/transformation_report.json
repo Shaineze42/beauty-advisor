@@ -1,0 +1,10 @@
+{
+  "generated_at": "2026-09-30T12:33:54.915823+00:00",
+  "processed_files": {
+    "products_raw.csv": 50,
+    "users_raw.csv": 20,
+    "interactions_raw.csv": 100,
+    "recommendation_requests.json": 10
+  },
+  "total_processed_rows": 180
+}

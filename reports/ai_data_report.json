@@ -1,0 +1,22 @@
+{
+  "status": "success",
+  "users": 20,
+  "products": 50,
+  "source_interactions": 100,
+  "unique_user_product_pairs": 100,
+  "feature_rows": 1000,
+  "labeled_rows": 169,
+  "train_rows": 129,
+  "test_rows": 40,
+  "positive_rows": 78,
+  "real_negative_rows": 13,
+  "sampled_negative_rows": 78,
+  "negative_rows": 91,
+  "testable_users": 20,
+  "recommendation_requests": 10,
+  "missing_values": {
+    "interaction_type": 900,
+    "rating": 953,
+    "label": 909
+  }
+}

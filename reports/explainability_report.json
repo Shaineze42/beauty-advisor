@@ -1,0 +1,28 @@
+{
+  "status": "success",
+  "users_tested": 3,
+  "results": [
+    {
+      "user_id": "user_001",
+      "products_count": 4,
+      "total_price": 99.46,
+      "budget": 100.0,
+      "explanations_validated": true
+    },
+    {
+      "user_id": "user_002",
+      "products_count": 2,
+      "total_price": 58.7,
+      "budget": 60.0,
+      "explanations_validated": true
+    },
+    {
+      "user_id": "user_003",
+      "products_count": 2,
+      "total_price": 58.78,
+      "budget": 60.0,
+      "explanations_validated": true
+    }
+  ],
+  "errors": []
+}

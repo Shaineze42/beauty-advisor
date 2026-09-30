@@ -1,0 +1,32 @@
+{
+  "generated_at": "2026-09-30T12:33:54.303457+00:00",
+  "sources": [
+    {
+      "source": "products_raw.csv",
+      "input_rows": 50,
+      "valid_rows": 50,
+      "rejected_rows": 0
+    },
+    {
+      "source": "users_raw.csv",
+      "input_rows": 20,
+      "valid_rows": 20,
+      "rejected_rows": 0
+    },
+    {
+      "source": "interactions_raw.csv",
+      "input_rows": 100,
+      "valid_rows": 100,
+      "rejected_rows": 0
+    },
+    {
+      "source": "recommendation_requests_raw.json",
+      "input_rows": 10,
+      "valid_rows": 10,
+      "rejected_rows": 0
+    }
+  ],
+  "total_input_rows": 180,
+  "total_valid_rows": 180,
+  "total_rejected_rows": 0
+}
