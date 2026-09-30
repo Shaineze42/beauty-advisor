@@ -27,6 +27,7 @@ steps += [
     "prepare_ai_data.py",
     "test_explainability.py",
     "evaluate_personalized.py",
+    "monitor_model.py",
 ]
 
 for step in steps:

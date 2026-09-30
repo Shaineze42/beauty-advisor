@@ -1,0 +1,96 @@
+{
+  "status": "ok",
+  "recommended_action": "Aucune action : le système respecte toutes les règles.",
+  "generated_at": "2026-09-30T14:51:20+00:00",
+  "dataset_version": "beauty-advisor-v1",
+  "reference_created_this_run": false,
+  "checks": [
+    {
+      "check": "règle critique : budget_compliance",
+      "status": "ok",
+      "detail": "valeur 1.0 (seuil 1.0)"
+    },
+    {
+      "check": "règle critique : compatibility_rate",
+      "status": "ok",
+      "detail": "valeur 1.0 (seuil 1.0)"
+    },
+    {
+      "check": "règle critique : availability_rate",
+      "status": "ok",
+      "detail": "valeur 1.0 (seuil 1.0)"
+    },
+    {
+      "check": "règle critique : explanation_coverage",
+      "status": "ok",
+      "detail": "valeur 1.0 (seuil 1.0)"
+    },
+    {
+      "check": "règle critique : no_duplicates_rate",
+      "status": "ok",
+      "detail": "valeur 1.0 (seuil 1.0)"
+    },
+    {
+      "check": "règle critique : max_products_respected_rate",
+      "status": "ok",
+      "detail": "valeur 1.0 (seuil 1.0)"
+    },
+    {
+      "check": "tests d'explicabilité",
+      "status": "ok",
+      "detail": "réussis"
+    },
+    {
+      "check": "pertinence vs aléatoire",
+      "status": "ok",
+      "detail": "hit rate fonctionnel 0.65 contre 0.45 (aléatoire)"
+    },
+    {
+      "check": "latence moyenne",
+      "status": "ok",
+      "detail": "0.0001 s (seuil 0.5 s)"
+    },
+    {
+      "check": "fill rate (routines complètes)",
+      "status": "ok",
+      "detail": "0.625 (seuil 0.5, limité par le budget total)"
+    },
+    {
+      "check": "évaluation à jour avec la préparation IA",
+      "status": "ok",
+      "detail": "hash identiques"
+    },
+    {
+      "check": "données sources inchangées depuis la préparation",
+      "status": "ok",
+      "detail": "hash identiques"
+    },
+    {
+      "check": "dérive : hit_functional",
+      "status": "ok",
+      "detail": "référence 0.65, actuel 0.65, baisse 0.0"
+    },
+    {
+      "check": "dérive : precision_functional",
+      "status": "ok",
+      "detail": "référence 0.1625, actuel 0.1625, baisse 0.0"
+    },
+    {
+      "check": "dérive : hit_category",
+      "status": "ok",
+      "detail": "référence 0.75, actuel 0.75, baisse 0.0"
+    }
+  ],
+  "retraining_policy": [
+    "sources modifiées depuis la dernière préparation (hash différent)",
+    "règle critique métier violée (budget, compatibilité, disponibilité, explications)",
+    "hit rate fonctionnel inférieur ou égal à la baseline aléatoire",
+    "baisse de plus de 10 points d'une métrique par rapport à la référence",
+    "nouvelles interactions ajoutées (régénération du split et réévaluation)"
+  ],
+  "summary": {
+    "ok": 15,
+    "warning": 0,
+    "alert": 0
+  }
+}

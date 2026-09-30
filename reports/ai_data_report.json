@@ -1,7 +1,7 @@
 {
   "status": "success",
   "dataset_version": "beauty-advisor-v1",
-  "generated_at": "2026-09-30T14:30:09+00:00",
+  "generated_at": "2026-09-30T14:51:19+00:00",
   "source_hash": {
     "products_raw.csv": "95445fd274556a66",
     "users_raw.csv": "ffcf041abea06915",
