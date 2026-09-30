@@ -1,0 +1,22 @@
+{
+  "status": "success",
+  "generated_at": "2026-09-30T14:45:45+00:00",
+  "files_checked": 18,
+  "checks": [
+    "syntaxe Python",
+    "secrets et jetons en dur",
+    "appels dangereux (eval, exec, shell=True)",
+    "imports inutilisés et except: sans type (avertissements)",
+    "tests unitaires (moteur et API)"
+  ],
+  "unit_tests": {
+    "passed": true,
+    "summary": [
+      "Ran 19 tests in 0.524s",
+      "",
+      "OK"
+    ]
+  },
+  "errors": [],
+  "warnings": []
+}

@@ -1,44 +1,44 @@
 {
   "pipeline": "Beauty Advisor",
   "status": "success",
-  "started_at": "2026-09-30T14:09:27.841676+00:00",
-  "finished_at": "2026-09-30T14:09:30.284751+00:00",
-  "duration_seconds": 2.44,
+  "started_at": "2026-09-30T14:30:07.606958+00:00",
+  "finished_at": "2026-09-30T14:30:09.832030+00:00",
+  "duration_seconds": 2.23,
   "steps": [
     {
       "name": "validation",
       "script": "validate_data.py",
       "status": "success",
-      "started_at": "2026-09-30T14:09:27.842548+00:00",
-      "finished_at": "2026-09-30T14:09:28.555459+00:00",
-      "duration_seconds": 0.71,
+      "started_at": "2026-09-30T14:30:07.607472+00:00",
+      "finished_at": "2026-09-30T14:30:08.088746+00:00",
+      "duration_seconds": 0.48,
       "return_code": 0
     },
     {
       "name": "transformation",
       "script": "transform_data.py",
       "status": "success",
-      "started_at": "2026-09-30T14:09:28.555641+00:00",
-      "finished_at": "2026-09-30T14:09:28.956453+00:00",
-      "duration_seconds": 0.4,
+      "started_at": "2026-09-30T14:30:08.089010+00:00",
+      "finished_at": "2026-09-30T14:30:08.565655+00:00",
+      "duration_seconds": 0.48,
       "return_code": 0
     },
     {
       "name": "chargement_postgresql",
       "script": "load_pg.py",
       "status": "success",
-      "started_at": "2026-09-30T14:09:28.956635+00:00",
-      "finished_at": "2026-09-30T14:09:29.465655+00:00",
-      "duration_seconds": 0.51,
+      "started_at": "2026-09-30T14:30:08.566098+00:00",
+      "finished_at": "2026-09-30T14:30:09.049690+00:00",
+      "duration_seconds": 0.48,
       "return_code": 0
     },
     {
       "name": "chargement_mongodb",
       "script": "load_mongo.py",
       "status": "success",
-      "started_at": "2026-09-30T14:09:29.465925+00:00",
-      "finished_at": "2026-09-30T14:09:30.284519+00:00",
-      "duration_seconds": 0.82,
+      "started_at": "2026-09-30T14:30:09.049898+00:00",
+      "finished_at": "2026-09-30T14:30:09.831837+00:00",
+      "duration_seconds": 0.78,
       "return_code": 0
     }
   ]

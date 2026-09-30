@@ -68,6 +68,34 @@ services:
       - ./data:/app/data
       - ./reports:/app/reports
 
+  api:
+    build:
+      context: ./app
+    container_name: beauty_api
+    restart: unless-stopped
+    command: ["python", "api.py"]
+    environment:
+      API_HOST: 0.0.0.0
+      API_PORT: 8000
+    ports:
+      - "127.0.0.1:${API_PORT:-8000}:8000"
+    volumes:
+      - ./data:/app/data:ro
+      - ./reports:/app/reports:ro
+    user: "1000:1000"
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+    networks:
+      - beauty_network
+
   pgadmin:
     image: dpage/pgadmin4
     container_name: beauty_pgadmin
