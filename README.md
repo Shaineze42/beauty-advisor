@@ -1,11 +1,11 @@
 # Beauty Advisor
 
 Plateforme Data/IA de recommandation de routines makeup personnalisées.
-Le système combine profils utilisatrices, catalogue produits et interactions pour proposer une routine
+Le système combine profils utilisateurs, catalogue produits et interactions pour proposer une routine
 (teint, blush, yeux, lèvres) **compatible, dans le budget et expliquée**.
 
 Aucune photo, donnée biométrique, donnée médicale ou tracking de navigation n'est utilisée.
-Le type de peau est déclaré par l'utilisatrice (pas de diagnostic).
+Le type de peau est déclaré par l'utilisateur (pas de diagnostic).
 
 ## Architecture
 
@@ -37,7 +37,7 @@ Commandes utiles :
 
 ```bash
 docker compose exec app python run_bloc4.py               # relancer la chaîne sans régénérer les données
-docker compose exec app python quality_check.py           # qualité, sécurité, 29 tests unitaires
+docker compose exec app python quality_check.py           # qualité, sécurité, 37 tests unitaires
 docker compose exec app python recommendation_engine.py --user-id user_001
 docker compose ps                                         # état des services (api en "healthy")
 ```
@@ -82,7 +82,7 @@ Une alerte de monitoring fait échouer le workflow et déclenche la notification
 
 ## Limites assumées
 
-- Données synthétiques (20 utilisatrices, 50 produits, 100 interactions) : les métriques sont indicatives.
+- Données synthétiques (20 utilisateurs, 50 produits, 100 interactions) : les métriques sont indicatives.
 - La précision exacte est un diagnostic : plusieurs produits différents peuvent convenir à la même personne.
 - Les négatifs échantillonnés ne sont pas de vrais rejets utilisateurs.
 - La pertinence fonctionnelle reprend la règle de génération des interactions (évaluation en partie circulaire).
