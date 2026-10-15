@@ -1,15 +1,22 @@
+# Beauty Advisor : pile complète (données, application, monitoring)
+# À lancer depuis la racine du dépôt avec ./scripts/up.sh
+# (ou : docker compose --env-file .env -f docker/docker-compose.yml up -d --build)
+name: beauty-advisor
+
 services:
+  # ---------- Couche données ----------
   postgres:
     image: postgres:15
     container_name: beauty_postgres
     restart: unless-stopped
     env_file:
-      - .env
+      - ../.env
     ports:
-      - "${POSTGRES_PORT}:5432"
+      - "127.0.0.1:${POSTGRES_PORT}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/01_init.sql:ro
+      - ./postgres/02_star_schema.sql:/docker-entrypoint-initdb.d/02_star_schema.sql:ro
     networks:
       - beauty_network
     healthcheck:
@@ -23,13 +30,13 @@ services:
     container_name: beauty_mongodb
     restart: unless-stopped
     env_file:
-      - .env
+      - ../.env
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
       MONGO_INITDB_DATABASE: ${MONGO_DB}
     ports:
-      - "${MONGO_PORT}:27017"
+      - "127.0.0.1:${MONGO_PORT}:27017"
     volumes:
       - mongo_data:/data/db
     networks:
@@ -44,13 +51,14 @@ services:
       timeout: 10s
       retries: 5
 
+  # ---------- Couche application ----------
   app:
     build:
-      context: ./app
+      context: ../app
     container_name: beauty_app
     restart: unless-stopped
     env_file:
-      - .env
+      - ../.env
     environment:
       POSTGRES_HOST: postgres
       POSTGRES_PORT: 5432
@@ -65,12 +73,12 @@ services:
       - beauty_network
     command: ["sh", "-c", "sleep infinity"]
     volumes:
-      - ./data:/app/data
-      - ./reports:/app/reports
+      - ../data:/app/data
+      - ../reports:/app/reports
 
   api:
     build:
-      context: ./app
+      context: ../app
     container_name: beauty_api
     restart: unless-stopped
     command: ["python", "api.py"]
@@ -80,8 +88,8 @@ services:
     ports:
       - "127.0.0.1:${API_PORT:-8000}:8000"
     volumes:
-      - ./data:/app/data:ro
-      - ./reports:/app/reports:ro
+      - ../data:/app/data:ro
+      - ../reports:/app/reports:ro
     user: "1000:1000"
     read_only: true
     cap_drop:
@@ -96,17 +104,99 @@ services:
     networks:
       - beauty_network
 
+  # ---------- Monitoring et observabilité ----------
+  exporter:
+    build:
+      context: ./exporter
+    container_name: beauty_exporter
+    restart: unless-stopped
+    environment:
+      API_URL: http://api:8000
+      REPORTS_DIR: /reports
+    volumes:
+      - ../reports:/reports:ro
+    user: "1000:1000"
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:9100/healthz')"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+    networks:
+      - beauty_network
+
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter:v0.15.0
+    container_name: beauty_postgres_exporter
+    restart: unless-stopped
+    environment:
+      DATA_SOURCE_URI: postgres:5432/${POSTGRES_DB}?sslmode=disable
+      DATA_SOURCE_USER: ${POSTGRES_USER}
+      DATA_SOURCE_PASS: ${POSTGRES_PASSWORD}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - beauty_network
+
+  prometheus:
+    image: prom/prometheus:v2.54.1
+    container_name: beauty_prometheus
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=15d
+    ports:
+      - "127.0.0.1:${PROMETHEUS_PORT:-9090}:9090"
+    volumes:
+      - ./prometheus:/etc/prometheus:ro
+      - prometheus_data:/prometheus
+    depends_on:
+      - exporter
+      - postgres-exporter
+    networks:
+      - beauty_network
+
+  grafana:
+    image: grafana/grafana:11.2.0
+    container_name: beauty_grafana
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+    ports:
+      - "127.0.0.1:${GRAFANA_PORT:-3000}:3000"
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
+    networks:
+      - beauty_network
+
+  # ---------- Outils d'administration ----------
   pgadmin:
     image: dpage/pgadmin4
     container_name: beauty_pgadmin
     restart: unless-stopped
     env_file:
-      - .env
+      - ../.env
     environment:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
     ports:
-      - "${PGADMIN_PORT}:80"
+      - "127.0.0.1:${PGADMIN_PORT}:80"
     volumes:
       - pgadmin_data:/var/lib/pgadmin
     depends_on:
@@ -120,7 +210,7 @@ services:
     container_name: beauty_mongo_express
     restart: unless-stopped
     env_file:
-      - .env
+      - ../.env
     environment:
       ME_CONFIG_MONGODB_SERVER: mongodb
       ME_CONFIG_MONGODB_PORT: 27017
@@ -130,7 +220,7 @@ services:
       ME_CONFIG_BASICAUTH_USERNAME: ${MONGO_EXPRESS_USER}
       ME_CONFIG_BASICAUTH_PASSWORD: ${MONGO_EXPRESS_PASSWORD}
     ports:
-      - "${MONGO_EXPRESS_PORT}:8081"
+      - "127.0.0.1:${MONGO_EXPRESS_PORT}:8081"
     depends_on:
       mongodb:
         condition: service_healthy
@@ -142,7 +232,7 @@ services:
     container_name: beauty_portainer
     restart: unless-stopped
     ports:
-      - "${PORTAINER_PORT}:9000"
+      - "127.0.0.1:${PORTAINER_PORT}:9000"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - portainer_data:/data
@@ -154,6 +244,8 @@ volumes:
   mongo_data:
   pgadmin_data:
   portainer_data:
+  prometheus_data:
+  grafana_data:
 
 networks:
   beauty_network:
