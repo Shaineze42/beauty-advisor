@@ -16,4 +16,11 @@ reports/
 postgres_data/
 mongodb_data/
 
+# Terraform (l'état et les variables contiennent des secrets)
+terraform/.terraform/
+terraform/*.tfstate
+terraform/*.tfstate.*
+terraform/terraform.tfvars
+terraform/crash.log
+
 .DS_Store

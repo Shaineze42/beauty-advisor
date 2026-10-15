@@ -1,0 +1,42 @@
+groups:
+  - name: beauty_advisor
+    rules:
+      - alert: ApiDown
+        expr: beauty_api_up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "L'API Beauty Advisor ne répond plus"
+
+      - alert: ApiErrorRateHigh
+        expr: increase(beauty_api_errors_total[5m]) / clamp_min(increase(beauty_api_requests_total[5m]), 1) > 0.2
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Plus de 20 % de réponses en erreur sur 5 minutes"
+
+      - alert: ApiLatencyHigh
+        expr: beauty_api_average_latency_ms > 500
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Latence moyenne de l'API supérieure à 500 ms"
+
+      - alert: PostgresDown
+        expr: pg_up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "PostgreSQL est injoignable"
+
+      - alert: ModelMonitoringAlert
+        expr: beauty_model_monitoring_decision == 2
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Le suivi du modèle demande une recalibration (décision alert)"

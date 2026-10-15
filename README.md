@@ -5,42 +5,140 @@ Le système combine profils utilisateurs, catalogue produits et interactions pou
 (teint, blush, yeux, lèvres) **compatible, dans le budget et expliquée**.
 
 Aucune photo, donnée biométrique, donnée médicale ou tracking de navigation n'est utilisée.
-Le type de peau est déclaré par l'utilisateur (pas de diagnostic).
+Le type de peau est déclaré par l'utilisateur (pas de diagnostic). Les données sont **synthétiques** (seed 42).
+
+## Structure du dépôt
+
+```text
+.
+├── app/                 Code Python (pipeline, moteur de recommandation, API, tests) + Dockerfile
+├── docker/
+│   ├── docker-compose.yml        Pile complète : données, application, monitoring
+│   ├── postgres/                 init.sql (modèle relationnel) + 02_star_schema.sql (vues analytiques)
+│   ├── exporter/                 Exportateur Prometheus (API + rapports du modèle)
+│   ├── prometheus/               prometheus.yml + alerts.yml (règles d'alerte)
+│   └── grafana/                  Source de données et tableau de bord provisionnés
+├── scripts/             up.sh, check.sh, demo.sh, down.sh, dc.sh, apply_star_schema.sh
+├── terraform/           Même pile décrite en Terraform (fournisseur Docker)
+├── data/  reports/      Jeux de données et rapports générés
+└── README.md
+```
 
 ## Architecture
 
-```text
-Sources CSV/JSON -> validation -> transformation -> PostgreSQL + MongoDB
-                                      |
-                                      v
-        préparation IA -> moteur de scoring hybride -> routine + explications
-                                      |
-                        évaluation, biais, monitoring, API
+```mermaid
+flowchart LR
+    S[Sources CSV / JSON] --> V[Validation]
+    V --> T[Transformation]
+    T --> PG[(PostgreSQL)]
+    T --> MG[(MongoDB)]
+    PG --> E[Moteur de scoring hybride]
+    E --> API[API d'inférence]
+    API --> EX[Exporter Prometheus]
+    PG --> PX[postgres-exporter]
+    EX --> PR[Prometheus]
+    PX --> PR
+    PR --> G[Grafana]
+    PR --> AL[Règles d'alerte]
 ```
 
-| Bloc | Contenu | Scripts (`app/`) |
-|---|---|---|
-| 3. Pipelines | validation, transformation, chargement | `validate_data.py`, `transform_data.py`, `load_pg.py`, `load_mongo.py`, `pipeline.py` |
-| 4. IA | données, moteur, explications, évaluation | `expand_raw_data.py`, `prepare_ai_data.py`, `recommendation_engine.py`, `evaluate_personalized.py`, `test_explainability.py` |
-| 4. Qualité et exploitation | API, tests, biais, charge, monitoring | `api.py`, `quality_check.py`, `tests/`, `bias_check.py`, `scale_test_engine.py`, `monitor_model.py`, `run_bloc4.py` |
+Tout tourne dans un réseau Docker privé (`beauty_network`). Les ports sont publiés sur `127.0.0.1`
+uniquement. Les services sensibles (API, exporter) sont en lecture seule, sans privilèges
+(`cap_drop: ALL`, `no-new-privileges`, utilisateur non-root).
+
+| Couche | Services |
+|---|---|
+| Données | `postgres` (relationnel), `mongodb` (documents) |
+| Application | `app` (pipeline et outils), `api` (inférence, port 8000) |
+| Monitoring | `exporter`, `postgres-exporter`, `prometheus`, `grafana` |
+| Administration | `pgadmin`, `mongo-express`, `portainer` |
 
 ## Démarrage rapide
 
-```bash
-cp .env.example .env            # renseigner les mots de passe
-docker compose up -d --build
-docker compose exec app python run_bloc4.py --regenerate   # chaîne complète reproductible (seed 42)
-docker compose exec app python monitor_model.py --set-reference
-```
-
-Commandes utiles :
+Prérequis : Docker et Docker Compose v2.
 
 ```bash
-docker compose exec app python run_bloc4.py               # relancer la chaîne sans régénérer les données
-docker compose exec app python quality_check.py           # qualité, sécurité, 37 tests unitaires
-docker compose exec app python recommendation_engine.py --user-id user_001
-docker compose ps                                         # état des services (api en "healthy")
+cp .env.example .env              # renseigner les mots de passe (jamais versionné)
+./scripts/up.sh                   # déploie la pile et attend qu'elle soit saine
+./scripts/dc.sh exec app python run_bloc4.py --regenerate   # chaîne complète reproductible (seed 42)
+./scripts/dc.sh exec app python monitor_model.py --set-reference
+./scripts/check.sh                # contrôle de bout en bout
+./scripts/demo.sh                 # trafic de démonstration pour le tableau de bord
 ```
+
+Pour une base déjà créée avant l'ajout du schéma analytique : `./scripts/apply_star_schema.sh`.
+
+| Script | Rôle |
+|---|---|
+| `scripts/up.sh` | Construit et démarre tous les services, attend l'état « healthy » |
+| `scripts/check.sh` | Teste API, Prometheus, Grafana et chaque cible de collecte ; code de sortie non nul en cas d'échec |
+| `scripts/demo.sh` | Envoie des requêtes valides et des erreurs volontaires (404, 400) |
+| `scripts/dc.sh` | Raccourci `docker compose` (bon fichier, bon `.env`) |
+| `scripts/down.sh` | Arrête la pile (`--volumes` supprime aussi les données) |
+| `scripts/apply_star_schema.sh` | Crée les vues analytiques sur une base existante |
+
+## Modèle de données
+
+**Relationnel (PostgreSQL)** : 3 tables, 2 clés étrangères avec `ON DELETE CASCADE`, contraintes de
+domaine (`interaction_type`, `rating` de 1 à 5) et 4 index.
+
+```mermaid
+erDiagram
+    USERS ||--o{ INTERACTIONS : effectue
+    PRODUCTS ||--o{ INTERACTIONS : concerne
+    USERS {
+        varchar user_id PK
+        varchar skin_type
+        varchar complexion
+        varchar undertone
+        varchar preferred_finish
+        varchar preferred_style
+        numeric max_budget
+        timestamp created_at
+    }
+    PRODUCTS {
+        varchar product_id PK
+        varchar brand
+        varchar name
+        varchar category
+        numeric price
+        varchar shade
+        varchar finish
+        varchar suitable_skin_type
+        boolean available
+        timestamp updated_at
+    }
+    INTERACTIONS {
+        varchar interaction_id PK
+        varchar user_id FK
+        varchar product_id FK
+        varchar interaction_type
+        int rating
+        timestamp created_at
+    }
+```
+
+**Analytique (star schema)** : le schéma `analytics` expose des vues (aucune donnée dupliquée) :
+un fait `fact_interaction` et trois dimensions `dim_user`, `dim_product`, `dim_date`.
+
+```mermaid
+erDiagram
+    DIM_USER ||--o{ FACT_INTERACTION : "user_id"
+    DIM_PRODUCT ||--o{ FACT_INTERACTION : "product_id"
+    DIM_DATE ||--o{ FACT_INTERACTION : "date_key"
+    FACT_INTERACTION {
+        varchar interaction_id
+        varchar user_id
+        varchar product_id
+        date date_key
+        varchar interaction_type
+        int rating
+    }
+```
+
+Exemple : `SELECT * FROM analytics.v_interactions_by_category_skin;`
+
+**Documents (MongoDB)** : profils, produits et interactions enrichis, pour la lecture souple par le moteur.
 
 ## API d'inférence
 
@@ -53,37 +151,42 @@ curl "http://localhost:8000/metrics"
 Entrées validées (`user_id` en `[A-Za-z0-9_-]{1,50}`, `max_products` de 1 à 6), erreurs propres (400, 404, 405),
 aucun secret dans le service, données en lecture seule, conteneur non-root sans privilèges.
 
-## Méthode
+## Monitoring et observabilité
+
+| Élément | Détail |
+|---|---|
+| Collecte | Prometheus, toutes les 15 s : `exporter` (API et rapports du modèle), `postgres-exporter` (connexions, taille des bases) |
+| Tableau de bord | Grafana, `http://localhost:3000` : état API et PostgreSQL, requêtes par minute, erreurs, latence, connexions, taille des bases, décision du suivi du modèle, métriques d'évaluation |
+| Alertes | 5 règles dans `docker/prometheus/alerts.yml` (API arrêtée, erreurs > 20 %, latence > 500 ms, PostgreSQL arrêté, suivi du modèle en `alert`), visibles dans Prometheus |
+| Vérifications d'état | `healthcheck` sur PostgreSQL, MongoDB, API et exporter |
+| Suivi du modèle | `monitor_model.py` : 15 contrôles, décision `ok` / `warning` / `alert`, exposée à Prometheus |
+
+Limite : les règles d'alerte sont évaluées mais aucune notification (e-mail, Slack) n'est branchée.
+
+## Terraform
+
+`terraform/` décrit la même pile avec le fournisseur Docker. Voir `terraform/README.md`.
+
+```bash
+cd terraform && cp terraform.tfvars.example terraform.tfvars
+terraform init && terraform validate && terraform apply
+```
+
+## Méthode du moteur
 
 - **Score de compatibilité** : `0,25 peau + 0,20 fini + 0,20 budget + 0,10 disponibilité + 0,15 interaction + 0,10 historique`.
 - **Règle de filtrage** : produit disponible, prix <= budget, compatible avec la peau OU le fini.
 - **Routine** : un produit par catégorie d'abord, puis complétion, budget total jamais dépassé.
-- **Évaluation** : split par utilisateur (seed 42), historique issu du train uniquement, produits déjà vus exclus,
-  comparaison à 2 baselines (aléatoire, règle peau + fini).
-
-## Rapports (`reports/`)
-
-| Rapport | Contenu |
-|---|---|
-| `ai_data_report.json` | jeu de données IA, split, hash des sources |
-| `evaluation_personalized_report.json` | métriques métier, diagnostic, baselines |
-| `explainability_report.json` | tests d'explicabilité et contre-tests |
-| `bias_report.json` | équité par groupe, concentration par marque |
-| `engine_scalability_report.json` | latence du moteur de 50 à 50 000 produits |
-| `monitoring_report.json` | décision ok / warning / alert et règles de recalibration |
-| `quality_report.json` | qualité du code, sécurité, tests unitaires |
-| `chain_report.json` | durée et statut de chaque étape de la chaîne |
 
 ## CI/CD (GitHub Actions)
 
-`.github/workflows/ci.yml` : à chaque push, pull request, et chaque lundi (recalibration planifiée) :
-contrôle qualité et tests, chaîne IA complète, validation Docker, puis publication de l'image sur GHCR (branche `main`).
-Une alerte de monitoring fait échouer le workflow et déclenche la notification GitHub.
+Trois tâches à chaque `push` sur `main` : (1) qualité, sécurité et tests unitaires, puis chaîne IA complète ;
+(2) validation de l'infrastructure : `docker compose config`, construction des images, `promtool` sur la
+configuration Prometheus, JSON du tableau de bord, `terraform validate` ; (3) publication de l'image de l'API
+sur GitHub Container Registry. Une exécution planifiée tourne chaque lundi.
 
 ## Limites assumées
 
-- Données synthétiques (20 utilisateurs, 50 produits, 100 interactions) : les métriques sont indicatives.
-- La précision exacte est un diagnostic : plusieurs produits différents peuvent convenir à la même personne.
-- Les négatifs échantillonnés ne sont pas de vrais rejets utilisateurs.
-- La pertinence fonctionnelle reprend la règle de génération des interactions (évaluation en partie circulaire).
-- Aucun modèle supervisé : 100 interactions ne permettraient pas d'en valider un sérieusement.
+- Déploiement sur un démon Docker local (on-premise) : conteneurs isolés, pas de machine virtuelle cloud.
+- Aucune notification d'alerte, pas de sauvegarde automatisée des volumes, pas de chiffrement au repos.
+- Données synthétiques : les volumes réels n'ont pas été testés.

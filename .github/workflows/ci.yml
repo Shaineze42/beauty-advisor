@@ -57,8 +57,8 @@ jobs:
             reports/*.log
           if-no-files-found: warn
 
-  docker:
-    name: Validation Docker
+  infrastructure:
+    name: Validation de l'infrastructure (Docker, Prometheus, Terraform)
     runs-on: ubuntu-latest
     timeout-minutes: 15
     needs: quality
@@ -69,16 +69,36 @@ jobs:
       - name: Valider docker-compose
         run: |
           cp .env.example .env
-          docker compose config --quiet
+          docker compose --env-file .env -f docker/docker-compose.yml config --quiet
 
-      - name: Construire l'image
-        run: docker build ./app
+      - name: Construire les images (application et exporter)
+        run: |
+          docker build ./app
+          docker build ./docker/exporter
+
+      - name: Valider la configuration Prometheus et les règles d'alerte
+        run: |
+          docker run --rm --entrypoint promtool \
+            -v "$PWD/docker/prometheus:/etc/prometheus:ro" \
+            prom/prometheus:v2.54.1 check config /etc/prometheus/prometheus.yml
+
+      - name: Valider le tableau de bord Grafana (JSON)
+        run: python -m json.tool docker/grafana/dashboards/beauty_advisor.json > /dev/null
+
+      - name: Installer Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Valider Terraform
+        working-directory: terraform
+        run: |
+          terraform init -backend=false
+          terraform validate
 
   publish:
     name: Publier l'image (déploiement continu)
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    needs: docker
+    needs: infrastructure
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     permissions:
       contents: read

@@ -1,0 +1,7 @@
+# Copier vers terraform.tfvars (ignoré par Git) et choisir de vrais mots de passe.
+postgres_password   = "change_me"
+mongo_root_password = "change_me"
+grafana_password    = "change_me"
+
+# Mac avec Docker Desktop : si le socket par défaut échoue, essayer
+# docker_host = "unix:///Users/<votre_nom>/.docker/run/docker.sock"
