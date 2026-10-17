@@ -1,0 +1,83 @@
+# Requêtes personnalisées de postgres-exporter : métriques du pipeline temps réel.
+# Les métriques sont nommées <requête>_<colonne>, par exemple pipeline_last_run_consumed.
+
+pipeline_last_run:
+  query: >
+    SELECT consumed::float AS consumed, loaded::float AS loaded, corrected::float AS corrected,
+           rejected::float AS rejected, duplicates::float AS duplicates, lag::float AS lag,
+           COALESCE(EXTRACT(EPOCH FROM (finished_at - started_at)), 0)::float AS duration_seconds,
+           CASE WHEN status = 'success' THEN 1 ELSE 0 END::float AS ok
+    FROM pipeline.runs
+    WHERE finished_at IS NOT NULL
+    ORDER BY finished_at DESC
+    LIMIT 1
+  master: true
+  metrics:
+    - consumed:
+        usage: GAUGE
+        description: Événements lus lors du dernier run
+    - loaded:
+        usage: GAUGE
+        description: Événements chargés lors du dernier run
+    - corrected:
+        usage: GAUGE
+        description: Événements corrigés automatiquement lors du dernier run
+    - rejected:
+        usage: GAUGE
+        description: Événements rejetés lors du dernier run
+    - duplicates:
+        usage: GAUGE
+        description: Doublons ignorés lors du dernier run
+    - lag:
+        usage: GAUGE
+        description: Retard restant du consommateur après le dernier run
+    - duration_seconds:
+        usage: GAUGE
+        description: Durée du dernier run
+    - ok:
+        usage: GAUGE
+        description: 1 si le dernier run a réussi, 0 sinon
+
+pipeline_freshness:
+  query: >
+    SELECT COALESCE(EXTRACT(EPOCH FROM (now() - MAX(finished_at))), 999999)::float AS seconds_since_last_run
+    FROM pipeline.runs
+  master: true
+  metrics:
+    - seconds_since_last_run:
+        usage: GAUGE
+        description: Secondes écoulées depuis la fin du dernier run
+
+pipeline_totals:
+  query: >
+    SELECT COALESCE(SUM(consumed), 0)::float AS consumed,
+           COALESCE(SUM(loaded), 0)::float AS loaded,
+           COALESCE(SUM(corrected), 0)::float AS corrected,
+           COALESCE(SUM(rejected), 0)::float AS rejected,
+           COUNT(*) FILTER (WHERE status = 'failed')::float AS runs_failed,
+           COUNT(*)::float AS runs,
+           (SELECT COUNT(*) FROM pipeline.quarantine WHERE NOT replayed)::float AS quarantine_open
+    FROM pipeline.runs
+  master: true
+  metrics:
+    - consumed:
+        usage: GAUGE
+        description: Événements lus depuis le démarrage
+    - loaded:
+        usage: GAUGE
+        description: Événements chargés depuis le démarrage
+    - corrected:
+        usage: GAUGE
+        description: Événements corrigés depuis le démarrage
+    - rejected:
+        usage: GAUGE
+        description: Événements rejetés depuis le démarrage
+    - runs_failed:
+        usage: GAUGE
+        description: Runs en échec
+    - runs:
+        usage: GAUGE
+        description: Runs terminés
+    - quarantine_open:
+        usage: GAUGE
+        description: Événements en quarantaine non rejoués

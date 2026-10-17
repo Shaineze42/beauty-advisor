@@ -1,0 +1,118 @@
+# Surcouche "pipeline temps réel" : flux Kafka (Redpanda), producteur, orchestrateur Airflow.
+# Les services du pipeline sont dans le profil "pipeline" : ils ne démarrent qu'avec
+#   ./scripts/pipeline_up.sh        (ou COMPOSE_PROFILES=pipeline ./scripts/dc.sh up -d)
+# Le service postgres-exporter de la pile principale est complété (métriques du pipeline).
+
+services:
+  redpanda:
+    image: docker.redpanda.com/redpandadata/redpanda:v24.2.7
+    container_name: beauty_redpanda
+    profiles: ["pipeline"]
+    restart: unless-stopped
+    command:
+      - redpanda
+      - start
+      - --mode=dev-container
+      - --smp=1
+      - --memory=512M
+      - --reserve-memory=0M
+      - --check=false
+      - --kafka-addr=internal://0.0.0.0:9092
+      - --advertise-kafka-addr=internal://redpanda:9092
+    volumes:
+      - redpanda_data:/var/lib/redpanda/data
+    networks:
+      - beauty_network
+    healthcheck:
+      test: ["CMD-SHELL", "rpk cluster health | grep -q 'Healthy:.*true'"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  stream-producer:
+    build: ./pipeline
+    image: beauty-advisor-stream:local
+    container_name: beauty_stream_producer
+    profiles: ["pipeline"]
+    restart: unless-stopped
+    env_file:
+      - ../.env
+    environment:
+      POSTGRES_HOST: postgres
+      KAFKA_BOOTSTRAP: redpanda:9092
+      STREAM_RATE: ${STREAM_RATE:-5}
+      DIRTY_RATIO: ${DIRTY_RATIO:-0.10}
+    volumes:
+      - ../python:/app/python:ro
+      - ../sql:/app/sql:ro
+    read_only: true
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redpanda:
+        condition: service_healthy
+    networks:
+      - beauty_network
+
+  airflow:
+    build: ./airflow
+    image: beauty-advisor-airflow:local
+    container_name: beauty_airflow
+    profiles: ["pipeline"]
+    restart: unless-stopped
+    env_file:
+      - ../.env
+    environment:
+      POSTGRES_HOST: postgres
+      KAFKA_BOOTSTRAP: redpanda:9092
+      PYTHONPATH: /opt/airflow/python
+      SQL_DIR: /opt/airflow/sql
+      AIRFLOW__CORE__EXECUTOR: SequentialExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: sqlite:////opt/airflow/db/airflow.db
+      AIRFLOW__CORE__LOAD_EXAMPLES: "False"
+      AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "False"
+      AIRFLOW__WEBSERVER__SECRET_KEY: ${AIRFLOW_SECRET_KEY:-beauty-advisor-local-secret}
+      AIRFLOW__SCHEDULER__MIN_FILE_PROCESS_INTERVAL: "30"
+      AIRFLOW_ADMIN_PASSWORD: ${AIRFLOW_ADMIN_PASSWORD:-change_me}
+    command:
+      - bash
+      - -c
+      - |
+        airflow db migrate
+        airflow users create --username admin --firstname Beauty --lastname Advisor \
+          --role Admin --email admin@example.com --password "$$AIRFLOW_ADMIN_PASSWORD" || true
+        airflow scheduler &
+        exec airflow webserver --port 8080
+    ports:
+      - "127.0.0.1:${AIRFLOW_PORT:-8085}:8080"
+    volumes:
+      - ../dags:/opt/airflow/dags:ro
+      - ../python:/opt/airflow/python:ro
+      - ../sql:/opt/airflow/sql:ro
+      - airflow_data:/opt/airflow/db
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redpanda:
+        condition: service_healthy
+    networks:
+      - beauty_network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/health >/dev/null"]
+      interval: 20s
+      timeout: 10s
+      retries: 15
+      start_period: 60s
+
+  postgres-exporter:
+    command:
+      - --extend.query-path=/etc/postgres_exporter/pipeline_queries.yaml
+    volumes:
+      - ./postgres/pipeline_queries.yaml:/etc/postgres_exporter/pipeline_queries.yaml:ro
+
+volumes:
+  redpanda_data:
+  airflow_data:

@@ -11,15 +11,21 @@ Le type de peau est déclaré par l'utilisateur (pas de diagnostic). Les donnée
 
 ```text
 .
-├── app/                 Code Python (pipeline, moteur de recommandation, API, tests) + Dockerfile
+├── app/                 Code Python (pipeline initial, moteur de recommandation, API, tests) + Dockerfile
+├── dags/                DAG Airflow du pipeline temps réel (beauty_stream_pipeline)
+├── python/              Modules du pipeline : producer, consumer, quality, gate, db
+├── sql/                 Schéma du pipeline, transformation ELT, contrôles qualité
+├── tests/               Tests unitaires du pipeline (pytest)
 ├── docker/
-│   ├── docker-compose.yml        Pile complète : données, application, monitoring
-│   ├── postgres/                 init.sql (modèle relationnel) + 02_star_schema.sql (vues analytiques)
-│   ├── exporter/                 Exportateur Prometheus (API + rapports du modèle)
-│   ├── prometheus/               prometheus.yml + alerts.yml (règles d'alerte)
-│   └── grafana/                  Source de données et tableau de bord provisionnés
-├── scripts/             up.sh, check.sh, demo.sh, down.sh, dc.sh, apply_star_schema.sh
-├── terraform/           Même pile décrite en Terraform (fournisseur Docker)
+│   ├── docker-compose.yml           Pile complète : données, application, monitoring
+│   ├── docker-compose.pipeline.yml  Surcouche pipeline : Redpanda (Kafka), producteur, Airflow
+│   ├── postgres/                    init.sql, 02_star_schema.sql, pipeline_queries.yaml (métriques)
+│   ├── pipeline/ airflow/           Images du producteur et d'Airflow
+│   ├── exporter/                    Exportateur Prometheus (API + rapports du modèle)
+│   ├── prometheus/                  prometheus.yml + alerts.yml (règles d'alerte)
+│   └── grafana/                     Source de données et tableaux de bord provisionnés
+├── scripts/             up, check, demo, down, dc, pipeline_up, pipeline_check, pipeline_demo
+├── terraform/           Pile principale décrite en Terraform (fournisseur Docker)
 ├── data/  reports/      Jeux de données et rapports générés
 └── README.md
 ```
@@ -163,6 +169,80 @@ aucun secret dans le service, données en lecture seule, conteneur non-root sans
 
 Limite : les règles d'alerte sont évaluées mais aucune notification (e-mail, Slack) n'est branchée.
 
+## Pipeline de données temps réel
+
+Les événements d'interaction (favori, achat, avis) arrivent **en continu** dans un flux Kafka (Redpanda).
+Un DAG Airflow les traite par micro-lots toutes les 2 minutes : validation et correction, chargement en
+base, transformation SQL, contrôles de qualité. Les données restent **synthétiques** (un producteur Python
+génère le flux, dont une part est volontairement dégradée pour exercer les contrôles).
+
+```mermaid
+flowchart LR
+    P[Producteur d'événements] -->|JSON| K[(Redpanda / Kafka<br/>topic interactions.raw)]
+    K --> I[ingest_batch<br/>validation + correction]
+    I -->|valides et corrigés| PG[(PostgreSQL<br/>interactions)]
+    I -->|rejetés| Q[(pipeline.quarantine)]
+    I --> R[(pipeline.raw_events<br/>traçabilité)]
+    PG --> T[transform_sql<br/>agrégat ELT]
+    T --> A[(analytics.interactions_per_minute)]
+    A --> G{quality_gate}
+    G --> F[finalize_run]
+    F --> M[(pipeline.runs)]
+    M --> PX[postgres-exporter] --> PR[Prometheus] --> GR[Grafana]
+    PR --> AL[Alertes pipeline]
+```
+
+DAG `beauty_stream_pipeline` (planification `*/2 * * * *`, un seul run actif à la fois) :
+`init_schema` → `ingest_batch` → `transform_sql` → `quality_gate` → `finalize_run`.
+
+### Lancer le pipeline
+
+```bash
+cp .env.example .env            # puis renseigner les mots de passe (dont AIRFLOW_ADMIN_PASSWORD)
+./scripts/up.sh                 # pile principale (données, API, monitoring)
+./scripts/pipeline_up.sh        # Redpanda, producteur, Airflow (environ 2 Go de mémoire en plus)
+./scripts/pipeline_check.sh     # flux, orchestrateur, métriques
+./scripts/pipeline_demo.sh      # rafale de 20 000 événements, run du DAG, résultats en base
+./scripts/pipeline_demo.sh --dirty   # rafale très dégradée : le portail qualité doit échouer
+```
+
+Airflow : `http://localhost:8085` (utilisateur `admin`). Tableau de bord Grafana « Beauty Advisor : pipeline temps réel ».
+
+### Contrôle qualité et correction d'erreurs
+
+| Cas | Traitement |
+|---|---|
+| Type en majuscules, avec espaces ou en français (`ACHAT`) | **Corrigé** automatiquement, correction tracée |
+| Note en texte (`"5"`) | **Corrigée** (conversion en entier) |
+| Date invalide ou absente | **Corrigée** (date d'ingestion), tracée |
+| Champ obligatoire manquant, type inconnu, note hors de 1 à 5, date future, JSON cassé | **Rejeté** vers `pipeline.quarantine` avec sa raison |
+| Utilisateur ou produit inconnu (intégrité référentielle) | **Rejeté** vers `pipeline.quarantine` |
+| Doublon (dans le lot ou déjà en base) | Ignoré et compté (`ON CONFLICT DO NOTHING`) |
+
+Portail qualité (`quality_gate`) : taux de rejet ≤ 30 %, fraîcheur ≤ 10 minutes, retard du consommateur
+≤ 20 000 messages, 0 violation d'intégrité. Un seuil franchi fait échouer le run (visible dans Airflow,
+Grafana et Prometheus).
+
+Reprise sur incident : 2 nouvelles tentatives par tâche (20 s d'écart) ; l'ingestion est idempotente
+(offsets validés après le commit en base, upsert sur l'identifiant) : rejouer un lot ne duplique rien.
+Les événements en quarantaine restent disponibles pour analyse et rejeu.
+
+### Surveillance du pipeline
+
+Métriques (via les requêtes de `docker/postgres/pipeline_queries.yaml`) : statut et durée du dernier run,
+événements lus, chargés, corrigés, rejetés, retard du consommateur, âge du dernier run, quarantaine ouverte.
+Quatre règles d'alerte : `PipelineStale`, `PipelineLastRunFailed`, `PipelineRejectionRateHigh`,
+`PipelineConsumerLagHigh`.
+
+### Tests
+
+```bash
+pip install pytest && python -m pytest tests -q
+```
+
+Tests unitaires des règles de qualité, du portail et du producteur ; exécutés par la CI avec la
+vérification de syntaxe du DAG.
+
 ## Terraform
 
 `terraform/` décrit la même pile avec le fournisseur Docker. Voir `terraform/README.md`.
@@ -190,3 +270,7 @@ sur GitHub Container Registry. Une exécution planifiée tourne chaque lundi.
 - Déploiement sur un démon Docker local (on-premise) : conteneurs isolés, pas de machine virtuelle cloud.
 - Aucune notification d'alerte, pas de sauvegarde automatisée des volumes, pas de chiffrement au repos.
 - Données synthétiques : les volumes réels n'ont pas été testés.
+- Pipeline : quasi temps réel par micro-lots de 2 minutes (pas de traitement événement par événement), un seul broker Kafka, Airflow en `SequentialExecutor` avec base SQLite (une tâche à la fois, adapté à une démonstration locale).
+- Le rejeu automatique de la quarantaine est prévu mais pas implémenté : les événements rejetés sont conservés avec leur raison.
+- La pile Terraform décrit la pile principale ; le pipeline se déploie avec Docker Compose (profil `pipeline`).
+

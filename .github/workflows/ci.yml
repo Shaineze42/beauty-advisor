@@ -57,6 +57,27 @@ jobs:
             reports/*.log
           if-no-files-found: warn
 
+  pipeline:
+    name: Pipeline temps réel (tests, DAG)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Récupérer le code
+        uses: actions/checkout@v4
+
+      - name: Installer Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Tests unitaires du pipeline (règles de qualité, portail, producteur)
+        run: |
+          pip install pytest
+          python -m pytest tests -q
+
+      - name: Vérifier la syntaxe du DAG et des modules
+        run: python -m py_compile dags/*.py python/*.py
+
   infrastructure:
     name: Validation de l'infrastructure (Docker, Prometheus, Terraform)
     runs-on: ubuntu-latest
@@ -70,11 +91,13 @@ jobs:
         run: |
           cp .env.example .env
           docker compose --env-file .env -f docker/docker-compose.yml config --quiet
+          docker compose --env-file .env -f docker/docker-compose.yml -f docker/docker-compose.pipeline.yml --profile pipeline config --quiet
 
       - name: Construire les images (application et exporter)
         run: |
           docker build ./app
           docker build ./docker/exporter
+          docker build ./docker/pipeline
 
       - name: Valider la configuration Prometheus et les règles d'alerte
         run: |
@@ -83,7 +106,9 @@ jobs:
             prom/prometheus:v2.54.1 check config /etc/prometheus/prometheus.yml
 
       - name: Valider le tableau de bord Grafana (JSON)
-        run: python -m json.tool docker/grafana/dashboards/beauty_advisor.json > /dev/null
+        run: |
+          python -m json.tool docker/grafana/dashboards/beauty_advisor.json > /dev/null
+          python -m json.tool docker/grafana/dashboards/beauty_pipeline.json > /dev/null
 
       - name: Installer Terraform
         uses: hashicorp/setup-terraform@v3
@@ -98,7 +123,7 @@ jobs:
     name: Publier l'image (déploiement continu)
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    needs: infrastructure
+    needs: [infrastructure, pipeline]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     permissions:
       contents: read
