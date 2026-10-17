@@ -40,3 +40,37 @@ groups:
           severity: warning
         annotations:
           summary: "Le suivi du modèle demande une recalibration (décision alert)"
+
+  - name: beauty_pipeline
+    rules:
+      - alert: PipelineStale
+        expr: pipeline_freshness_seconds_since_last_run > 600
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Aucun run du pipeline terminé depuis plus de 10 minutes"
+
+      - alert: PipelineLastRunFailed
+        expr: pipeline_last_run_ok == 0
+        for: 30s
+        labels:
+          severity: warning
+        annotations:
+          summary: "Le dernier run du pipeline est en échec (contrôle qualité ou erreur technique)"
+
+      - alert: PipelineRejectionRateHigh
+        expr: pipeline_last_run_rejected / clamp_min(pipeline_last_run_consumed, 1) > 0.3
+        for: 4m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Plus de 30 % d'événements rejetés sur le dernier run"
+
+      - alert: PipelineConsumerLagHigh
+        expr: pipeline_last_run_lag > 5000
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Le consommateur accumule du retard sur le flux (plus de 5000 messages)"
