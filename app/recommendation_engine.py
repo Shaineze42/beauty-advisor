@@ -1,6 +1,8 @@
 import argparse
 import csv
 import json
+import os
+import sys
 from pathlib import Path
 
 
@@ -18,9 +20,50 @@ SCORE_WEIGHTS = {
     "history_match": 0.10,
 }
 
-assert abs(sum(SCORE_WEIGHTS.values()) - 1.0) < 1e-9, (
-    "La somme des poids doit valoir 1."
-)
+DEFAULT_SCORE_WEIGHTS = dict(SCORE_WEIGHTS)
+MODEL_FILE = Path(os.getenv("BA_MODEL_FILE", "models/current.json"))
+ACTIVE_MODEL_VERSION = "v0-defaut"
+
+
+def check_weights(weights):
+    """Un jeu de poids est valide s'il a les 6 clés, positives, de somme 1."""
+    return (
+        set(weights) == set(DEFAULT_SCORE_WEIGHTS)
+        and all(isinstance(v, (int, float)) and v >= 0 for v in weights.values())
+        and abs(sum(weights.values()) - 1.0) < 1e-6
+    )
+
+
+def load_active_weights(path=None):
+    """Applique les poids du modèle actif (models/current.json) s'il est valide.
+
+    Sans fichier, ou avec un fichier invalide, les poids par défaut restent en
+    place : le service ne tombe jamais à cause d'un modèle défectueux.
+    Retourne la version utilisée.
+    """
+    global ACTIVE_MODEL_VERSION
+    path = Path(path) if path else MODEL_FILE
+    SCORE_WEIGHTS.clear()
+    SCORE_WEIGHTS.update(DEFAULT_SCORE_WEIGHTS)
+    ACTIVE_MODEL_VERSION = "v0-defaut"
+    if not path.exists():
+        return ACTIVE_MODEL_VERSION
+    try:
+        with path.open("r", encoding="utf-8") as file:
+            model = json.load(file)
+        weights = model["weights"]
+        if not check_weights(weights):
+            raise ValueError("poids invalides")
+    except (OSError, ValueError, KeyError, TypeError) as error:
+        print(f"Modèle {path} ignoré ({error}) : poids par défaut conservés.",
+              file=sys.stderr)
+        return ACTIVE_MODEL_VERSION
+    SCORE_WEIGHTS.update({name: float(value) for name, value in weights.items()})
+    ACTIVE_MODEL_VERSION = str(model.get("version", "inconnue"))
+    return ACTIVE_MODEL_VERSION
+
+
+load_active_weights()
 
 
 def read_features():
