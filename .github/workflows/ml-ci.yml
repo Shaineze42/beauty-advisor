@@ -10,6 +10,10 @@ on:
 permissions:
   contents: read
 
+env:
+  DATA_DIR: ${{ github.workspace }}/data
+  REPORTS_DIR: ${{ github.workspace }}/reports
+
 jobs:
   ml-tests:
     name: Tests du modèle et de l'API

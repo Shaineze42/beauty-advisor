@@ -14,6 +14,10 @@ permissions:
   contents: write
   pull-requests: write
 
+env:
+  DATA_DIR: ${{ github.workspace }}/data
+  REPORTS_DIR: ${{ github.workspace }}/reports
+
 jobs:
   retrain:
     runs-on: ubuntu-latest
