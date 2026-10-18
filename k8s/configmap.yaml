@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: beauty-advisor-api
+  namespace: beauty-advisor
+data:
+  BA_MODEL_FILE: /srv/models/current.json

@@ -12,8 +12,9 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 APP_DIR = ROOT / "app"
+# En dernier : app/ contient un ancien api.py qui ne doit pas masquer le paquet api/.
 if str(APP_DIR) not in sys.path:
-    sys.path.insert(0, str(APP_DIR))
+    sys.path.append(str(APP_DIR))
 
 import evaluate_personalized as evaluation  # noqa: E402
 import recommendation_engine as engine  # noqa: E402

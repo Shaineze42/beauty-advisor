@@ -1,0 +1,91 @@
+name: CI-ML Beauty Advisor
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ml-tests:
+    name: Tests du modèle et de l'API
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Installer les dépendances
+        run: pip install -r app/requirements.txt -r requirements-ml.txt -r requirements-api.txt httpx pytest
+
+      - name: Préparer les données
+        run: |
+          python app/validate_data.py
+          python app/transform_data.py
+          python app/prepare_ai_data.py
+
+      - name: Tests ML et API
+        run: python -m pytest tests/ml tests/api -q
+
+      - name: Réentraînement à blanc (rien n'est écrit dans models/)
+        run: python retrain/retrain.py --dry-run
+
+      - name: Détection de dérive sur données simulées
+        run: python monitoring/drift.py --simulate
+
+      - name: Conserver les rapports
+        uses: actions/upload-artifact@v4
+        with:
+          name: rapports-ml
+          path: |
+            reports/retrain_report.json
+            reports/drift_report.json
+
+  k8s-validate:
+    name: Validation des manifests Kubernetes
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Valider avec kubeconform
+        run: |
+          curl -sSL https://github.com/yannh/kubeconform/releases/download/v0.6.7/kubeconform-linux-amd64.tar.gz | tar xz
+          ./kubeconform -strict -summary -ignore-filename-pattern 'kustomization' k8s/
+
+  docker-image:
+    name: Image de serving
+    needs: [ml-tests, k8s-validate]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Construire l'image
+        run: docker build -t beauty-advisor-api:ci .
+
+      - name: Test de fumée du conteneur
+        run: |
+          docker run -d --name ba -p 8000:8000 beauty-advisor-api:ci
+          for i in $(seq 1 30); do curl -sf http://localhost:8000/health && break; sleep 2; done
+          curl -sf http://localhost:8000/health
+          curl -sf -X POST http://localhost:8000/recommend -H 'Content-Type: application/json' -d '{"user_id":"user_001"}' | head -c 300
+          curl -sf http://localhost:8000/metrics | head -n 5
+          docker logs ba | tail -n 5
+
+      - name: Publier sur GHCR (branche main uniquement)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          IMAGE="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/beauty-advisor-api"
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+          docker tag beauty-advisor-api:ci "$IMAGE:latest"
+          docker tag beauty-advisor-api:ci "$IMAGE:${{ github.sha }}"
+          docker push "$IMAGE:latest"
+          docker push "$IMAGE:${{ github.sha }}"

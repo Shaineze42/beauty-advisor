@@ -1,0 +1,10 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: beauty-advisor-api
+  namespace: beauty-advisor
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: beauty-advisor-api
