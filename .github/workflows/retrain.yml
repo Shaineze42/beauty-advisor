@@ -1,0 +1,75 @@
+name: Réentraînement du modèle
+
+on:
+  schedule:
+    - cron: "0 6 * * 1"   # chaque lundi à 06:00 UTC
+  workflow_dispatch:
+    inputs:
+      force:
+        description: "Réentraîner même sans déclencheur"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+env:
+  DATA_DIR: ${{ github.workspace }}/data
+  REPORTS_DIR: ${{ github.workspace }}/reports
+
+jobs:
+  retrain:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Installer les dépendances
+        run: pip install -r app/requirements.txt -r requirements-ml.txt
+
+      - name: Préparer les données
+        run: |
+          python app/validate_data.py
+          python app/transform_data.py
+          python app/prepare_ai_data.py
+
+      - name: Réentraîner (déclencheurs, comparaison, décision)
+        run: python retrain/retrain.py ${{ inputs.force && '--force' || '' }}
+
+      - name: Lire la décision
+        id: decision
+        run: |
+          python - <<'PY' >> "$GITHUB_OUTPUT"
+          import json
+          report = json.load(open("reports/retrain_report.json", encoding="utf-8"))
+          print("promoted=" + str(report["decision"]["promote"]).lower())
+          PY
+
+      - name: Conserver le rapport et les modèles
+        uses: actions/upload-artifact@v4
+        with:
+          name: reentrainement
+          path: |
+            reports/retrain_report.json
+            models/
+
+      - name: Proposer le nouveau modèle (branche + Pull Request)
+        if: steps.decision.outputs.promoted == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          BRANCH="retrain/auto-${{ github.run_id }}"
+          git switch -c "$BRANCH"
+          git add models
+          git commit -m "Réentraînement automatique : nouveau modèle actif"
+          git push origin "$BRANCH"
+          gh pr create --base main --head "$BRANCH" \
+            --title "Réentraînement automatique : nouveau modèle" \
+            --body "Modèle promu par retrain/retrain.py (voir le rapport joint au run). À relire avant fusion." \
+            || echo "Pull Request non créée : activer 'Allow GitHub Actions to create pull requests' dans les réglages du dépôt."

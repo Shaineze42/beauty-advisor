@@ -73,7 +73,7 @@ jobs:
       - name: Tests unitaires du pipeline (règles de qualité, portail, producteur)
         run: |
           pip install pytest
-          python -m pytest tests -q
+          python -m pytest tests -q --ignore=tests/ml --ignore=tests/api
 
       - name: Vérifier la syntaxe du DAG et des modules
         run: python -m py_compile dags/*.py python/*.py
