@@ -1,5 +1,6 @@
 """Logique de serving, indépendante du framework web (testable sans FastAPI)."""
 import json
+import os
 import sys
 import threading
 import time
@@ -16,6 +17,9 @@ USER_ID_PATTERN = r"^[A-Za-z0-9_-]{1,50}$"
 DEFAULT_MAX_PRODUCTS = 4
 MAX_PRODUCTS_LIMIT = 6
 AI_REPORT_PATH = Path("reports/ai_data_report.json")
+# Rapport écrit par monitoring/drift.py ; chemin surchargeable par BA_DRIFT_REPORT.
+DEFAULT_DRIFT_REPORT = "reports/drift_report.json"
+DRIFT_LEVELS = {"stable": 0, "warning": 1, "drift": 2}
 
 
 class UnknownUser(Exception):
@@ -28,6 +32,50 @@ def read_json(path):
         return {}
     with path.open("r", encoding="utf-8") as file:
         return json.load(file)
+
+
+def drift_metric_lines(path=None):
+    """Métriques de dérive (format Prometheus) lues dans le rapport de monitoring/drift.py.
+
+    Si le rapport est absent ou illisible, seule ba_drift_report_available vaut 0 :
+    le service continue de répondre normalement.
+    """
+    path = Path(path or os.environ.get("BA_DRIFT_REPORT", DEFAULT_DRIFT_REPORT))
+    report, age = {}, None
+    try:
+        report = read_json(path)
+        age = max(0.0, time.time() - path.stat().st_mtime)
+    except (OSError, ValueError):
+        report = {}
+    lines = [
+        "# HELP ba_drift_report_available 1 si un rapport de dérive est disponible.",
+        "# TYPE ba_drift_report_available gauge",
+        f"ba_drift_report_available {1 if report else 0}",
+    ]
+    if not report:
+        return lines
+    status = DRIFT_LEVELS.get(str(report.get("status")), -1)
+    lines += [
+        "# HELP ba_drift_status Dérive des données : 0 stable, 1 à surveiller, 2 dérive (-1 inconnu).",
+        "# TYPE ba_drift_status gauge",
+        f"ba_drift_status {status}",
+        "# HELP ba_drift_psi_max PSI le plus élevé parmi les caractéristiques.",
+        "# TYPE ba_drift_psi_max gauge",
+        f"ba_drift_psi_max {report.get('max_psi', 0)}",
+        "# HELP ba_drift_feature_psi PSI par caractéristique.",
+        "# TYPE ba_drift_feature_psi gauge",
+    ]
+    for name, item in sorted((report.get("features") or {}).items()):
+        lines.append(f'ba_drift_feature_psi{{feature="{name}"}} {item.get("psi", 0)}')
+    lines += [
+        "# HELP ba_drift_report_simulated 1 si le rapport vient de données volontairement décalées.",
+        "# TYPE ba_drift_report_simulated gauge",
+        f"ba_drift_report_simulated {1 if report.get('simulated') else 0}",
+        "# HELP ba_drift_report_age_seconds Âge du rapport de dérive.",
+        "# TYPE ba_drift_report_age_seconds gauge",
+        f"ba_drift_report_age_seconds {age:.0f}",
+    ]
+    return lines
 
 
 class RecommendationService:
@@ -114,4 +162,5 @@ class RecommendationService:
                 "# TYPE ba_model_content_auc_test gauge",
                 f"ba_model_content_auc_test {auc}",
             ]
+        lines += drift_metric_lines()
         return "\n".join(lines) + "\n"

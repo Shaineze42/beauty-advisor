@@ -1,0 +1,29 @@
+# API de serving du Bloc 4 (FastAPI), démarrée seulement avec le profil "serving".
+# Elle est construite avec le Dockerfile racine et scrutée par Prometheus (job beauty_serving).
+# Utilisation : ./scripts/serving_up.sh
+services:
+  serving-api:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    image: beauty-advisor-api:local
+    container_name: beauty_serving_api
+    profiles: ["serving"]
+    restart: unless-stopped
+    environment:
+      BA_DRIFT_REPORT: /srv/reports/drift_report.json
+    ports:
+      # Local uniquement. 8010 car le port 8000 est utilisé par l'API historique.
+      - "127.0.0.1:${SERVING_PORT:-8010}:8000"
+    volumes:
+      # Rapport de dérive écrit par monitoring/drift.py sur la machine hôte (lecture seule).
+      - ../reports:/srv/reports:ro
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - beauty_network

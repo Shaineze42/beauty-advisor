@@ -300,7 +300,7 @@ flowchart LR
 
 ```bash
 pip install -r app/requirements.txt -r requirements-ml.txt -r requirements-api.txt
-python3 -m pytest tests/ml tests/api -q      # 38 tests (modèle et API)
+python3 -m pytest tests/ml tests/api -q      # 44 tests (modèle, API, dérive)
 python3 -m pytest tests -q                   # suite complète
 ```
 
@@ -338,9 +338,28 @@ docker run --rm -p 8010:8000 beauty-advisor-api
 | `POST /recommend` | Routine de 4 produits, entrées validées (Pydantic), raisons par produit |
 | `GET /health` | État, version du modèle, taille des données |
 | `GET /model` | Poids, données d'entraînement (empreinte), métriques du modèle servi |
-| `GET /metrics` | Métriques Prometheus : `ba_requests_total`, `ba_request_duration_seconds`, `ba_model_info`, `ba_model_content_auc_test`, `ba_uptime_seconds` |
+| `GET /metrics` | Métriques Prometheus : `ba_requests_total`, `ba_request_duration_seconds`, `ba_model_info`, `ba_model_content_auc_test`, `ba_uptime_seconds`, et l'état de dérive `ba_drift_status`, `ba_drift_psi_max`, `ba_drift_feature_psi` |
 
 Clé d'API optionnelle : si la variable `API_KEY` est définie, `POST /recommend` exige l'en-tête `X-API-Key`. Chaque réponse porte un `X-Request-ID`.
+
+### Monitoring en production
+
+L'API de serving tourne aussi comme service Docker (profil `serving`) et est collectée par Prometheus (job `beauty_serving`), puis affichée dans Grafana.
+
+```bash
+python3 monitoring/drift.py                  # écrit reports/drift_report.json (état réel)
+./scripts/serving_up.sh                      # pile + API de serving, recharge Prometheus et Grafana
+./scripts/serving_demo.sh                    # envoie du trafic (valide et invalide)
+python3 monitoring/drift.py --simulate       # données décalées : l'alerte de dérive se déclenche
+```
+
+| Élément | Où |
+|---|---|
+| Tableau de bord « API de serving et dérive » (14 panneaux) | Grafana, `http://localhost:3000` |
+| 5 alertes `beauty_serving` : API arrêtée, erreurs 5xx, latence, AUC sous 0,60, dérive | Prometheus, `http://localhost:9090/alerts` |
+| Collecte | `docker/prometheus/prometheus.yml` (job `beauty_serving`) |
+
+La dérive est calculée par `monitoring/drift.py` (PSI) puis exposée par l'API à partir de `reports/drift_report.json`. Un rapport « simulé » est signalé par `ba_drift_report_simulated`.
 
 ### Kubernetes
 
@@ -360,7 +379,8 @@ Clé d'API optionnelle : si la variable `API_KEY` est définie, `POST /recommend
 - Les mêmes utilisateurs sont présents en entraînement et en test : le test mesure le classement de nouveaux produits pour des utilisateurs connus, pas la généralisation à de nouveaux utilisateurs.
 - Évaluation fonctionnelle en partie circulaire : garde-fou métier, pas preuve de pertinence réelle.
 - Détection de dérive par un PSI implémenté dans le dépôt (pas d'outil externe comme Evidently).
-- Métriques de l'API exposées mais pas encore collectées par Prometheus ni affichées dans Grafana ; aucune notification d'alerte.
+- Les alertes sont visibles dans Prometheus et Grafana ; aucune notification externe (e-mail, messagerie) n'est envoyée.
+- La dérive est calculée par lot (rapport écrit par `monitoring/drift.py`), pas en continu sur chaque requête.
 - Manifests Kubernetes validés, jamais déployés.
 
 ## Limites assumées

@@ -10,6 +10,13 @@ scrape_configs:
     static_configs:
       - targets: ["exporter:9100"]
 
+  # API de serving du Bloc 4 (profil "serving" : voir scripts/serving_up.sh).
+  # La cible apparaît "down" tant que ce profil n'est pas démarré : c'est normal.
+  - job_name: beauty_serving
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["serving-api:8000"]
+
   - job_name: postgres
     static_configs:
       - targets: ["postgres-exporter:9187"]
