@@ -16,7 +16,7 @@ Beauty Advisor propose à un utilisateur une routine makeup de quatre produits (
 | Règles métier critiques | 6 taux (budget, compatibilité, disponibilité, explications, doublons, nombre de produits) | 100 % pour promouvoir |
 | Dérive des données | PSI par caractéristique | stable < 0,10 ; surveiller 0,10 à 0,25 ; dérive à partir de 0,25 |
 | Réactivité de l'API | Durée moyenne d'une requête | environ 8 ms mesurés en local (7 requêtes) |
-| Qualité du code | Tests automatisés | 38 tests ML et API, tous verts en CI |
+| Qualité du code | Tests automatisés | 44 tests ML et API, tous verts en CI |
 
 ## 3. Périmètre
 
@@ -36,8 +36,9 @@ Beauty Advisor propose à un utilisateur une routine makeup de quatre produits (
 | EF6 | Réentraîner sur déclencheur (pas de modèle actif, dérive, données modifiées) ou à la demande | Appliqué |
 | EF7 | Réentraînement planifié chaque lundi et manuel depuis GitHub, avec Pull Request automatique si un modèle est promu | Appliqué |
 | EF8 | Détecter la dérive des données d'entrée (PSI) | Appliqué |
-| EF9 | Brancher les métriques de l'API sur Prometheus et Grafana | Prévu |
-| EF10 | Notification automatique en cas d'alerte | Prévu |
+| EF9 | Brancher les métriques de l'API (service, modèle, dérive) sur Prometheus et Grafana | Appliqué |
+| EF10 | Alertes sur arrêt de l'API, erreurs 5xx, latence, AUC du modèle servi et dérive des données | Appliqué (alertes visibles dans Prometheus et Grafana) |
+| EF11 | Notification externe des alertes (e-mail, messagerie) | Prévu |
 
 ## 5. Exigences non fonctionnelles
 

@@ -74,3 +74,46 @@ groups:
           severity: warning
         annotations:
           summary: "Le consommateur accumule du retard sur le flux (plus de 5000 messages)"
+
+  - name: beauty_serving
+    rules:
+      - alert: ServingApiDown
+        # Ne se déclenche que si l'API tournait dans la dernière heure puis s'est arrêtée.
+        expr: up{job="beauty_serving"} == 0 and on() (max_over_time(up{job="beauty_serving"}[1h]) == 1)
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "L'API de serving ne répond plus"
+
+      - alert: ServingServerErrorsHigh
+        expr: sum(increase(ba_requests_total{code=~"5.."}[5m])) / clamp_min(sum(increase(ba_requests_total[5m])), 1) > 0.05
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Plus de 5 % d'erreurs serveur (5xx) sur l'API de serving"
+
+      - alert: ServingLatencyHigh
+        expr: increase(ba_request_duration_seconds_sum[5m]) / clamp_min(increase(ba_request_duration_seconds_count[5m]), 1) > 0.5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Durée moyenne des requêtes de l'API de serving supérieure à 500 ms"
+
+      - alert: ServingModelAucLow
+        expr: ba_model_content_auc_test < 0.6
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "L'AUC de contenu du modèle servi est passée sous 0,60"
+
+      - alert: ServingDataDrift
+        expr: ba_drift_status == 2
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Dérive des données détectée (PSI) : un réentraînement est à envisager"
