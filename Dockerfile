@@ -4,6 +4,8 @@
 
 FROM python:3.11-slim AS data
 ENV PYTHONDONTWRITEBYTECODE=1
+ENV DATA_DIR=/build/data
+ENV REPORTS_DIR=/build/reports
 WORKDIR /build
 COPY app/requirements.txt app/requirements.txt
 RUN pip install --no-cache-dir -r app/requirements.txt
