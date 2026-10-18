@@ -26,6 +26,16 @@ Le type de peau est déclaré par l'utilisateur (pas de diagnostic). Les donnée
 │   └── grafana/                     Source de données et tableaux de bord provisionnés
 ├── scripts/             up, check, demo, down, dc, pipeline_up, pipeline_check, pipeline_demo
 ├── terraform/           Pile principale décrite en Terraform (fournisseur Docker)
+├── notebooks/           Notebook d'entraînement et de comparaison des modèles (Bloc 4)
+├── src/beauty_ml/       Code du modèle : données, entraînement, évaluation, registre (Bloc 4)
+├── models/              Modèles versionnés (v0, v1), registry.json, current.json (Bloc 4)
+├── retrain/             Réentraînement automatisé (Bloc 4)
+├── monitoring/          Détection de dérive PSI (Bloc 4)
+├── api/                 API de serving FastAPI (Bloc 4)
+├── k8s/                 Manifests Kubernetes (Bloc 4)
+├── Dockerfile           Image de l'API de serving (Bloc 4)
+├── .github/workflows/   CI/CD : ci.yml, ml-ci.yml, retrain.yml
+├── docs/                Cahier des charges du Bloc 4
 ├── data/  reports/      Jeux de données et rapports générés
 └── README.md
 ```
@@ -264,6 +274,94 @@ Trois tâches à chaque `push` sur `main` : (1) qualité, sécurité et tests un
 (2) validation de l'infrastructure : `docker compose config`, construction des images, `promtool` sur la
 configuration Prometheus, JSON du tableau de bord, `terraform validate` ; (3) publication de l'image de l'API
 sur GitHub Container Registry. Une exécution planifiée tourne chaque lundi.
+
+Les workflows `ml-ci.yml` (modèle, API, Kubernetes, image de serving) et `retrain.yml` (réentraînement planifié) sont décrits dans la section Bloc 4.
+
+## Bloc 4 : solution d'IA industrialisée (MLOps)
+
+Les poids du score de recommandation sont **appris** par régression logistique, le modèle est **servi** par une API FastAPI, **testé et déployé** par la CI/CD, **réentraîné** automatiquement et **surveillé**. Cahier des charges : `docs/cahier_des_charges_bloc4.md`.
+
+> Deux API coexistent : l'API historique de la pile Docker (`app/api.py`, `GET /recommend`, port 8000) et l'API de serving du Bloc 4 (`api/`, FastAPI, `POST /recommend`), qui charge le modèle actif depuis `models/current.json`.
+
+```mermaid
+flowchart LR
+    D[Données labellisées] --> T[Entraînement<br/>src/beauty_ml]
+    T --> C[Modèle candidat]
+    C --> G{Décision<br/>3 garde-fous}
+    G -->|promu| R[(models/<br/>registry + current.json)]
+    G -->|refusé| A[Modèle actif conservé]
+    R --> API[API FastAPI<br/>api/]
+    API --> M[/metrics Prometheus/]
+    DR[Dérive PSI<br/>monitoring/drift.py] -->|déclencheur| T
+    CRON[Planification hebdomadaire<br/>retrain.yml] --> T
+```
+
+### Installation et tests
+
+```bash
+pip install -r app/requirements.txt -r requirements-ml.txt -r requirements-api.txt
+python3 -m pytest tests/ml tests/api -q      # 38 tests (modèle et API)
+python3 -m pytest tests -q                   # suite complète
+```
+
+### Notebook
+
+```bash
+pip install -r requirements-notebooks.txt
+python3 -m jupyter nbconvert --to notebook --execute --inplace notebooks/01_exploration_et_entrainement.ipynb
+```
+
+Le notebook appelle `src/beauty_ml/` : chargement du découpage entraînement et test, baseline manuelle, validation croisée groupée, poids appris, intervalle de confiance par bootstrap, décision de promotion, dérive.
+
+### Réentraînement et dérive
+
+```bash
+python3 retrain/retrain.py --dry-run            # déclencheurs et décision, rien n'est écrit
+python3 retrain/retrain.py                      # réentraîne si un déclencheur est actif
+python3 retrain/retrain.py --force              # réentraîne sans déclencheur
+python3 retrain/retrain.py --rollback           # revient à la version précédente
+python3 monitoring/drift.py --simulate          # montre la détection sur des données décalées
+```
+
+Un candidat est **promu** seulement si : (1) les six règles métier critiques sont à 100 %, (2) la précision fonctionnelle ne baisse pas de plus de 0,02, (3) l'AUC de contenu gagne au moins 0,01. Sinon le modèle actif est conservé. Déclencheurs : pas de modèle actif, dérive (PSI à partir de 0,25), données modifiées, ou demande manuelle.
+
+### API de serving
+
+```bash
+python3 -m uvicorn api.main:app --port 8010     # documentation : http://127.0.0.1:8010/docs
+docker build -t beauty-advisor-api .
+docker run --rm -p 8010:8000 beauty-advisor-api
+```
+
+| Route | Rôle |
+|---|---|
+| `POST /recommend` | Routine de 4 produits, entrées validées (Pydantic), raisons par produit |
+| `GET /health` | État, version du modèle, taille des données |
+| `GET /model` | Poids, données d'entraînement (empreinte), métriques du modèle servi |
+| `GET /metrics` | Métriques Prometheus : `ba_requests_total`, `ba_request_duration_seconds`, `ba_model_info`, `ba_model_content_auc_test`, `ba_uptime_seconds` |
+
+Clé d'API optionnelle : si la variable `API_KEY` est définie, `POST /recommend` exige l'en-tête `X-API-Key`. Chaque réponse porte un `X-Request-ID`.
+
+### Kubernetes
+
+`k8s/` contient : namespace, configmap, deployment (2 réplicas, sondes, conteneur non-root, filesystem en lecture seule), service, HPA (2 à 5 réplicas), PodDisruptionBudget, kustomization. Les manifests sont validés par `kubeconform` en CI ; **ils n'ont pas été déployés sur un cluster**.
+
+### CI/CD du Bloc 4
+
+| Workflow | Déclencheur | Contenu |
+|---|---|---|
+| `ml-ci.yml` | Pull Request et `main` | Tests ML et API, réentraînement à blanc, dérive simulée ; validation des manifests (`kubeconform`) ; build de l'image, test de fumée du conteneur, publication sur GHCR depuis `main` uniquement |
+| `retrain.yml` | Lundi 06:00 UTC et lancement manuel | Réentraînement, rapport et modèles en artefact, Pull Request automatique si un modèle est promu |
+
+### Limites du Bloc 4
+
+- Données synthétiques et 40 lignes de test : l'écart entre le modèle appris et les poids manuels n'est pas significatif (intervalle de confiance dans le notebook).
+- Quatre poids sur six sont appris ; `interaction` et `history_match` restent fixes (risque de fuite de cible).
+- Les mêmes utilisateurs sont présents en entraînement et en test : le test mesure le classement de nouveaux produits pour des utilisateurs connus, pas la généralisation à de nouveaux utilisateurs.
+- Évaluation fonctionnelle en partie circulaire : garde-fou métier, pas preuve de pertinence réelle.
+- Détection de dérive par un PSI implémenté dans le dépôt (pas d'outil externe comme Evidently).
+- Métriques de l'API exposées mais pas encore collectées par Prometheus ni affichées dans Grafana ; aucune notification d'alerte.
+- Manifests Kubernetes validés, jamais déployés.
 
 ## Limites assumées
 
