@@ -50,6 +50,12 @@ Beauty Advisor propose à un utilisateur une routine makeup de quatre produits (
 | ENF4 | Reproductibilité : graine fixe, empreinte (`data_hash`) des données dans chaque modèle | Appliqué |
 | ENF5 | Disponibilité : 2 réplicas, sondes de santé, mise à l'échelle de 2 à 5 réplicas | Partiel (manifests validés par `kubeconform`, jamais déployés sur un cluster) |
 | ENF6 | Confidentialité : données synthétiques uniquement | Appliqué |
+| ENF7 | Robustesse : refus des entrées invalides (code 422), utilisateur inconnu géré, rapport de dérive absent sans panne | Appliqué |
+| ENF8 | Passage à l'échelle : moteur mesuré de 50 à 50 000 produits (122 ms en moyenne à 50 000, seuil 2 s) ; API sans état | Partiel (pas de test de charge HTTP sur l'API) |
+| ENF9 | Sécurité : secrets hors du dépôt, permissions minimales dans la CI, images taguées par commit | Partiel (pas de TLS ni d'authentification forte ; pas de certification ISO 27001) |
+| ENF10 | RGPD et Informatique et Libertés : 8 champs de profil, aucune donnée sensible, données synthétiques | Partiel (consentement, droits d'accès et d'effacement, durée de conservation à prévoir avec des données réelles) |
+| ENF11 | IA éthique : explicabilité par produit, contrôle d'équité par groupe, promotion d'un modèle revue par Pull Request | Partiel (écarts d'équité indicatifs : groupes de 3 à 8 personnes) |
+| ENF12 | Accessibilité : réponses en texte structuré (JSON), sans dépendance visuelle | Prévu (aucune interface livrée pour ce bloc ; audit à faire) |
 
 ## 6. Contraintes et hypothèses
 
@@ -57,6 +63,7 @@ Beauty Advisor propose à un utilisateur une routine makeup de quatre produits (
 - Jeu de test de 40 lignes : les écarts de métriques sont bruités (intervalle de confiance par bootstrap dans le notebook).
 - Les mêmes utilisateurs sont présents en entraînement et en test (un produit positif du test n'est jamais vu à l'entraînement pour le même utilisateur) : le test ne mesure pas la généralisation à de nouveaux utilisateurs.
 - Quatre poids sur six sont appris : les deux autres sont calculés à partir des interactions passées, donc des labels (risque de fuite de cible).
+- Pas de test de charge HTTP sur l'API : seul le moteur a été mesuré en montée en charge.
 - L'évaluation fonctionnelle est en partie circulaire : elle sert de garde-fou métier, pas de preuve de pertinence réelle.
 
 ## 7. Risques et réponses
